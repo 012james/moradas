@@ -1,0 +1,107 @@
+<div class="register-page">
+  <!-- Botão de Retorno -->
+  <div class="top-nav">
+    <button 
+      type="button" 
+      class="btn-back" 
+      (click)="goBack()" 
+      aria-label="Voltar para login">
+      <span class="material-symbols-outlined icon">arrow_back</span>
+    </button>
+  </div>
+ 
+  <!-- Cabeçalho e Logo -->
+  <div class="register-header">
+    <div class="logo-badge">
+      <img 
+        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDThzK_dGKeZUgiaT9wivYOlyi2mv6mejAlZ6dIFtVjnpogiZhNSLOsD9Hww6lK1_1ZXGTC9cPfZF1WY2cPYfzIMI4T75po7K52PEPWfkIHqeuIIDzJxlynx_qCRcUgso4X_Swl_1paFuSk6692Rkr2ougt_VAcO2fHx4DQHzbOKQNm74fkVZgF9yYNT35IsvkP6ALlq2HaSfV7M21BVtclH3qGw9RtnrZhYNWs1gd2pbPEEfdMf-f0Ri7T5RrF0LD6cQ" 
+        alt="Condomínio Moradas" 
+        class="logo-img"
+      />
+    </div>
+    <h1 class="main-title">
+      Bem-vindo(a) ao<br>
+      <span class="highlight">Condomínio Moradas</span>
+    </h1>
+    <p class="description">
+      Crie sua conta para acessar comunicados, reservas e votações do seu condomínio.
+    </p>
+  </div>
+ 
+  <!-- Card do Formulário -->
+  <div class="form-container">
+    <div class="form-card">
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+        
+        <!-- Campo Nome Completo -->
+        <div class="input-group" [class.is-focused]="focusedField === 'nome'" [class.has-error]="isFieldInvalid('nome')">
+          <label for="nome" class="floating-label">Nome Completo</label>
+          <input 
+            type="text" 
+            id="nome" 
+            formControlName="nome" 
+            placeholder="Maria João Silva"
+            (focus)="onFocus('nome')" 
+            (blur)="onBlur()"
+            class="form-input"
+          />
+          <span class="material-symbols-outlined input-icon">person</span>
+        </div>
+ 
+        <!-- Grupo de Endereço: Rua / Casa -->
+        <div class="address-grid">
+          <!-- Campo Rua / Alameda -->
+          <div class="input-group select-group" [class.is-focused]="focusedField === 'rua'" [class.has-error]="isFieldInvalid('rua')">
+            <label for="rua" class="floating-label">Rua / Alameda</label>
+            <select 
+              id="rua" 
+              formControlName="rua"
+              (focus)="onFocus('rua')" 
+              (blur)="onBlur()"
+              class="form-select">
+              <option value="" disabled selected>Selecione</option>
+              <option *ngFor="let opt of streetOptions" [value]="opt">{{ opt }}</option>
+            </select>
+            <span class="material-symbols-outlined input-icon pointer-events-none">expand_more</span>
+          </div>
+ 
+          <!-- Campo Número da Casa -->
+          <div class="input-group" [class.is-focused]="focusedField === 'numero'" [class.has-error]="isFieldInvalid('numero')">
+            <label for="numero" class="floating-label">Número da Casa</label>
+            <input 
+              type="text" 
+              id="numero" 
+              formControlName="numero" 
+              placeholder="Ex: 402"
+              (focus)="onFocus('numero')" 
+              (blur)="onBlur()"
+              class="form-input"
+            />
+            <span class="material-symbols-outlined input-icon">tag</span>
+          </div>
+        </div>
+ 
+        <!-- Botão Criar Conta -->
+        <button 
+          type="submit" 
+          class="btn-submit" 
+          [disabled]="registerForm.invalid || isSubmitting">
+          <span>{{ isSubmitting ? 'Cadastrando...' : 'Criar Conta' }}</span>
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+ 
+      </form>
+    </div>
+ 
+    <div class="gradient-overlay"></div>
+  </div>
+ 
+  <!-- Termos e Privacidade -->
+  <div class="terms-footer">
+    <p class="terms-text">
+      Ao criar sua conta, você concorda com nossos 
+      <a href="#" class="terms-link">Termos de Uso</a> e 
+      <a href="#" class="terms-link">Política de Privacidade</a>.
+    </p>
+  </div>
+</div>

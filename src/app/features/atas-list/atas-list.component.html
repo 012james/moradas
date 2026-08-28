@@ -1,0 +1,138 @@
+<div class="atas-page">
+  <!-- Header Principal com Logo e Avatar -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <img 
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEWfc7TMmvKSbgVGH05m9MJ97rUGb8K33FsgG8m0ZIicdRQ7DXqnjMdW-fk5xMaOY-Z7GuGTSHshmiU2Y91x5pzK_7_rltfbbBDEf2zWILplkyWM5ehs5jS0dCT4eILNOjQMMmjiw5BI4hbHZe0p6Ot0U56EFpnq_fiuqdbFf7UCUSiIEo5reyivScXfElct_htUi6pusv4Q8n2MI5u0pwcFl96_pg0zB2RfwQifisvjiyp_hc2WOc5ChtV93CPFX1vEw-LZ-DaSGEeg" 
+          alt="Condomínio Moradas Logo" 
+          class="brand-logo"
+        />
+        <span class="brand-title">Atas</span>
+      </div>
+
+      <div class="profile-action">
+        <button type="button" class="btn-avatar" (click)="openProfile()">
+          <img 
+            src="https://lh3.googleusercontent.com/aida/AEtjO1USIPdMs_5fMpXOgWeVqAw0v66RXJy6F_uwjwXMz5188fNCDEidBt40Qb8RvPncR3b0Aa_fZfJFHDLbOMZAJt3bt_yenENApMFEXRnyYz4QWBz5-NWpJd_6RH1d0nS4xioXqrTVwS6QqI33O6g_AvSIivJlfOcw2LOR2VehL71XmWWlMPN--rjTqRPn3sDKtpjvlGCGcgVrQcpXKeKBaRw1PgAJsnhO1-n3NjLscAanueAzMdwzstDjDA" 
+            alt="Perfil" 
+            class="avatar-img"
+          />
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="main-content">
+    
+    <!-- Card de Votação em Aberto (Destaque) -->
+    <section *ngIf="activeAta" class="active-voting-card">
+      <div class="card-top">
+        <div class="badge-and-title">
+          <span class="status-badge open">
+            <span class="pulse-dot"></span>
+            Votação em Aberto
+          </span>
+          <h2 class="assembly-title">{{ activeAta.title }}</h2>
+        </div>
+        <span class="material-symbols-outlined vote-icon">how_to_vote</span>
+      </div>
+
+      <p class="assembly-desc">{{ activeAta.description }}</p>
+
+      <div class="card-bottom">
+        <div class="date-info">
+          <span class="material-symbols-outlined calendar-icon">calendar_month</span>
+          <span class="date-text">{{ activeAta.dateFormatted }}</span>
+        </div>
+        <button type="button" class="btn-open-detail" (click)="openAta(activeAta.id)">
+          Abrir
+          <span class="material-symbols-outlined arrow-icon">arrow_forward</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Barra de Pesquisa e Filtro -->
+    <div class="search-bar-row">
+      <div class="search-input-wrapper">
+        <span class="material-symbols-outlined search-icon">search</span>
+        <input 
+          type="text" 
+          [(ngModel)]="searchQuery" 
+          (input)="filterAtas()"
+          placeholder="Pesquisar atas..." 
+          class="search-input"
+        />
+        <button *ngIf="searchQuery" (click)="clearSearch()" class="btn-clear-search">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <button type="button" class="btn-filter" (click)="toggleFilter()" [class.active]="filterStatus !== 'all'">
+        <span class="material-symbols-outlined">tune</span>
+      </button>
+    </div>
+
+    <!-- Lista de Atas Anteriores -->
+    <section class="previous-atas-section">
+      <div class="section-title-row">
+        <h3 class="section-title">Atas Anteriores</h3>
+        <span class="badge-count">{{ filteredPastAtas.length }}</span>
+      </div>
+
+      <div class="atas-list">
+        <article 
+          *ngFor="let ata of filteredPastAtas" 
+          class="past-ata-card" 
+          (click)="openAta(ata.id)">
+          <div class="past-card-header">
+            <span class="date">{{ ata.dateFormatted }}</span>
+            <span class="status-pill" [ngClass]="ata.status">
+              <span class="material-symbols-outlined icon">
+                {{ ata.status === 'approved' ? 'check_circle' : 'cancel' }}
+              </span>
+              {{ ata.statusLabel }}
+            </span>
+          </div>
+          <h4 class="past-title">{{ ata.title }}</h4>
+        </article>
+
+        <!-- Mensagem quando não houver resultados -->
+        <div *ngIf="filteredPastAtas.length === 0" class="empty-state">
+          <span class="material-symbols-outlined empty-icon">search_off</span>
+          <p>Nenhuma ata encontrada com "{{ searchQuery }}".</p>
+        </div>
+      </div>
+
+      <button *ngIf="filteredPastAtas.length > 0" type="button" class="btn-view-all" (click)="showAllAtas()">
+        Ver todas as atas
+      </button>
+    </section>
+
+  </main>
+
+  <!-- Barra de Navegação Inferior -->
+  <nav class="bottom-navigation">
+    <a 
+      class="nav-tab" 
+      [class.active]="currentTab === 'atas'" 
+      (click)="selectTab('atas')">
+      <span class="material-symbols-outlined">description</span>
+      <span class="label">Atas</span>
+    </a>
+    <a 
+      class="nav-tab" 
+      [class.active]="currentTab === 'avisos'" 
+      (click)="selectTab('avisos')">
+      <span class="material-symbols-outlined">notifications</span>
+      <span class="label">Avisos</span>
+    </a>
+    <a 
+      class="nav-tab" 
+      [class.active]="currentTab === 'perfil'" 
+      (click)="selectTab('perfil')">
+      <span class="material-symbols-outlined">account_circle</span>
+      <span class="label">Perfil</span>
+    </a>
+  </nav>
+</div>

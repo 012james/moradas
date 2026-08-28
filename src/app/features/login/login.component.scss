@@ -1,0 +1,186 @@
+@use '../../shared/variables' as v;
+ 
+.login-container {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: v.$color-background;
+  color: v.$color-on-background;
+  overflow: hidden;
+}
+ 
+.bg-blur-circle {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(48px);
+  pointer-events: none;
+ 
+  &.top-circle {
+    top: 0;
+    right: 0;
+    margin-right: -5rem;
+    margin-top: -5rem;
+    width: 16rem;
+    height: 16rem;
+    background-color: rgba(v.$color-primary, 0.06);
+  }
+ 
+  &.bottom-circle {
+    bottom: 0;
+    left: 0;
+    margin-left: -5rem;
+    margin-bottom: -5rem;
+    width: 20rem;
+    height: 20rem;
+    background-color: rgba(v.$color-tertiary, 0.06);
+  }
+}
+ 
+.login-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: v.$spacing-xxl v.$spacing-margin-mobile;
+  max-width: 440px;
+  margin: 0 auto;
+  width: 100%;
+  position: relative;
+  z-index: 10;
+ 
+  @media (min-width: 640px) {
+    padding: v.$spacing-xxl v.$spacing-margin-desktop;
+  }
+}
+ 
+.login-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: v.$spacing-xl;
+  animation: fadeInUp 0.6s ease-out forwards;
+ 
+  .logo-wrapper {
+    width: 10rem;
+    height: 10rem;
+    margin-bottom: v.$spacing-md;
+    border-radius: v.$radius-lg;
+    overflow: hidden;
+    background-color: v.$color-surface;
+    box-shadow: v.$shadow-sm;
+ 
+    @media (min-width: 640px) {
+      width: 12rem;
+      height: 12rem;
+    }
+ 
+    .logo-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+ 
+  .title {
+    font-family: v.$font-family;
+    font-size: v.$font-size-headline-xl;
+    line-height: v.$line-height-headline-xl;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: v.$color-on-background;
+    text-align: center;
+    margin-bottom: v.$spacing-xs;
+  }
+ 
+  .subtitle {
+    font-size: v.$font-size-body-lg;
+    line-height: v.$line-height-body-lg;
+    color: v.$color-on-surface-variant;
+    text-align: center;
+    max-width: 320px;
+  }
+}
+ 
+.actions-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: v.$spacing-md;
+  width: 100%;
+  animation: fadeInUp 0.6s ease-out 0.2s forwards;
+  opacity: 0;
+ 
+  .btn-google {
+    width: 100%;
+    background-color: v.$color-surface;
+    color: v.$color-on-surface;
+    font-size: v.$font-size-body-lg;
+    font-weight: 500;
+    padding: 1rem 1.25rem;
+    border-radius: v.$radius-default;
+    border: 1px solid v.$color-outline-variant;
+    box-shadow: v.$shadow-sm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: v.$spacing-sm;
+    cursor: pointer;
+    transition: all 0.2s ease;
+ 
+    &:hover {
+      background-color: v.$color-surface-container-low;
+      box-shadow: v.$shadow-md;
+    }
+ 
+    &:active {
+      transform: scale(0.98);
+    }
+ 
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+ 
+    .google-icon {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+  }
+}
+ 
+.register-footer {
+  margin-top: v.$spacing-xl;
+  text-align: center;
+  animation: fadeInUp 0.6s ease-out 0.4s forwards;
+  opacity: 0;
+ 
+  .register-text {
+    font-size: v.$font-size-body-md;
+    color: v.$color-on-surface-variant;
+ 
+    .register-link {
+      color: v.$color-primary;
+      font-weight: 600;
+      text-decoration: none;
+      border-bottom: 2px solid transparent;
+      transition: border-color 0.2s ease;
+ 
+      &:hover {
+        text-decoration: underline;
+        border-color: v.$color-primary;
+      }
+    }
+  }
+}
+ 
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
