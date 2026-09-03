@@ -1,0 +1,52 @@
+<div class="create-container">
+    <app-nav></app-nav>
+  <h2>Nova Assembleia</h2>
+  
+  <div *ngIf="successMessage" class="success-alert">
+    {{ successMessage }}
+  </div>
+
+  <form [formGroup]="ataForm" (ngSubmit)="onSubmit()">
+    
+    <div class="form-group">
+      <label>Título da Assembleia *</label>
+      <input type="text" formControlName="title" placeholder="Ex: Assembleia Geral Extraordinária">
+    </div>
+
+    <div class="form-group">
+      <label>Subtítulo *</label>
+      <input type="text" formControlName="subtitle" placeholder="Ex: Pintura da Fachada e Reformas">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group half">
+        <label>Data *</label>
+        <input type="date" formControlName="date">
+      </div>
+      <div class="form-group half">
+        <label>Horário *</label>
+        <input type="time" formControlName="time">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Local *</label>
+      <input type="text" formControlName="location" placeholder="Ex: Salão de Festas (Bloco A)">
+    </div>
+
+    <div class="form-group">
+      <label>Descrição *</label>
+      <textarea formControlName="description" rows="4" placeholder="Detalhes e pautas da reunião..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>URL do PDF Anexo (Opcional)</label>
+      <input type="url" formControlName="pdfUrl" placeholder="https://...">
+    </div>
+
+    <button type="submit" [disabled]="ataForm.invalid || isSubmitting" class="submit-btn">
+      {{ isSubmitting ? 'Salvando...' : 'Cadastrar Assembleia' }}
+    </button>
+  </form>
+  <app-footer [currentTab]="'admin'" *ngIf="authService.currentUser$ | async"></app-footer>
+</div>

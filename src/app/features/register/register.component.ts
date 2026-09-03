@@ -3,16 +3,17 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth/auth.service';
+import { NavComponent } from '../../shared/nav/nav.component';
  
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, NavComponent],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss']
 })
 export class RegisterComponent implements OnInit {
-  private authService = inject(AuthService);
+  authService = inject(AuthService);
   private router = inject(Router);
   private fb = inject(FormBuilder);
   registerForm!: FormGroup;

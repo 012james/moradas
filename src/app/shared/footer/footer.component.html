@@ -1,0 +1,24 @@
+<nav *ngIf="currentTab" class="bottom-nav">
+  <a (click)="openAtas()" [class.active]="currentTab === 'atas'" class="nav-item">
+    <span class="material-symbols-outlined">description</span>
+    <span>Atas</span>
+  </a>
+
+  <a routerLink="/avisos" routerLinkActive="active" class="nav-item">
+    <span class="material-symbols-outlined">campaign</span>
+    <span>Avisos</span>
+  </a>
+
+  <a (click)="openProfile()" [class.active]="currentTab === 'perfil'" class="nav-item">
+    <span class="material-symbols-outlined">person</span>
+    <span>Perfil</span>
+  </a>
+
+  <!-- O menu admin só aparece se o usuário existir e tiver a role 'admin' ou 'sindico' no banco de dados -->
+  <ng-container *ngIf="authService.currentUser$ | async as user">
+    <a (click)="openAtasCreate()" *ngIf="user.role === 'admin'" [class.active]="currentTab === 'admin'" class="nav-item admin-item">
+      <span class="material-symbols-outlined">admin_panel_settings</span>
+      <span>Admin</span>
+    </a>
+  </ng-container>
+</nav>

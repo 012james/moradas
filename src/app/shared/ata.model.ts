@@ -14,6 +14,7 @@ export interface Ata {
   statusLabel: string;
   pdfUrl?: string;
   userVote?: VoteChoice;
+  outcome?: 'approved' | 'rejected' | 'insufficient_votes';
   votesCount?: {
     favorable: number;
     against: number;

@@ -19,6 +19,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/atas-list/atas-list.component').then(m => m.AtasListComponent)
   },
   {
+    path: 'new-ata',
+    loadComponent: () => import('./features/ata-create/ata-create.component').then(m => m.AtaCreateComponent)
+  },
+  {
     path: 'atas/:id',
     loadComponent: () => import('./features/ata-detail/ata-detail.component').then(m => m.AtaDetailComponent)
   },

@@ -1,38 +1,22 @@
 <div class="detail-page">
-  <!-- Header com Botão Voltar e Avatar -->
-  <header class="app-header">
-    <div class="header-inner">
-      <button type="button" class="btn-back" (click)="goBack()">
-        <span class="material-symbols-outlined">arrow_back</span>
-      </button>
-      <span class="page-title">Ata Detalhe</span>
-      <div class="avatar-box">
-        <img 
-          src="https://lh3.googleusercontent.com/aida/AEtjO1USIPdMs_5fMpXOgWeVqAw0v66RXJy6F_uwjwXMz5188fNCDEidBt40Qb8RvPncR3b0Aa_fZfJFHDLbOMZAJt3bt_yenENApMFEXRnyYz4QWBz5-NWpJd_6RH1d0nS4xioXqrTVwS6QqI33O6g_AvSIivJlfOcw2LOR2VehL71XmWWlMPN--rjTqRPn3sDKtpjvlGCGcgVrQcpXKeKBaRw1PgAJsnhO1-n3NjLscAanueAzMdwzstDjDA" 
-          alt="Perfil" 
-          class="avatar-img"
-        />
-      </div>
-    </div>
-  </header>
-
+  <app-nav></app-nav>
   <!-- Conteúdo Principal -->
   <main class="main-content">
     
     <!-- Cabeçalho da Assembleia -->
     <section class="assembly-header-section">
       <div class="title-and-badge">
-        <h1 class="main-title">Assembleia Geral Extraordinária</h1>
+        <h1 class="main-title">{{ ata?.title }}</h1>
         <span class="status-badge" [ngClass]="ata?.status || 'open'">
           <span class="material-symbols-outlined icon">how_to_vote</span>
-          Votação Aberta
+          {{ ata?.status === 'open' ? 'Votação em Aberto' : 'Votação Encerrada' }}
         </span>
       </div>
 
-      <h2 class="subtitle">Pintura da Fachada e Reformas Estruturais</h2>
-      
+      <h2 class="subtitle">{{ ata?.subtitle }}</h2>
+
       <p class="description">
-        Deliberação sobre a contratação de empresa especializada para pintura das fachadas leste e oeste, além de reparos nas fissuras estruturais identificadas no laudo técnico do mês passado.
+        {{ ata?.description }}
       </p>
 
       <button type="button" class="btn-download-pdf" (click)="downloadPdf()">
@@ -50,7 +34,7 @@
         </div>
         <div class="info-content">
           <span class="info-label">Data e Hora</span>
-          <strong class="info-value">15 de Novembro, 19:30</strong>
+          <strong class="info-value">{{ ata?.dateFormatted }} às {{ ata?.time }}</strong>
         </div>
       </div>
 
@@ -61,13 +45,13 @@
         </div>
         <div class="info-content">
           <span class="info-label">Local</span>
-          <strong class="info-value">Salão de Festas (Bloco A)</strong>
+          <strong class="info-value">{{ ata?.location }}</strong>
         </div>
       </div>
     </section>
 
     <!-- Seção de Votação Interativa -->
-    <section *ngIf="!votedOption" class="voting-section" [class.submitting]="isSubmitting">
+    <section *ngIf="ata?.status === 'open' && !votedOption" class="voting-section" [class.submitting]="isSubmitting">
       <h3 class="voting-heading">Como você vota nesta pauta?</h3>
 
       <div class="voting-buttons">
@@ -135,5 +119,66 @@
       </div>
     </section>
 
+<section *ngIf="ata?.status !== 'open'" class="closed-voting-section" [ngClass]="ata?.outcome || 'default'">
+
+  <div class="closed-icon-badge">
+    <!-- Ícone dinâmico -->
+    <span class="material-symbols-outlined" *ngIf="ata?.outcome === 'approved'">check_circle</span>
+    <span class="material-symbols-outlined" *ngIf="ata?.outcome === 'rejected'">cancel</span>
+    <span class="material-symbols-outlined" *ngIf="ata?.outcome === 'insufficient_votes'">warning</span>
+    <span class="material-symbols-outlined" *ngIf="!ata?.outcome">lock</span>
+  </div>
+
+  <h3 class="closed-title">
+    <!-- Título dinâmico -->
+    <ng-container *ngIf="ata?.outcome === 'approved'">Pauta Aprovada</ng-container>
+    <ng-container *ngIf="ata?.outcome === 'rejected'">Pauta Reprovada</ng-container>
+    <ng-container *ngIf="ata?.outcome === 'insufficient_votes'">Votos Insuficientes</ng-container>
+    <ng-container *ngIf="!ata?.outcome">Votação Encerrada</ng-container>
+  </h3>
+
+  <p class="closed-desc">
+    <!-- Descrição dinâmica -->
+    <ng-container *ngIf="ata?.outcome === 'approved'">A maioria dos moradores votou a favor. As medidas serão aplicadas
+      conforme a pauta.</ng-container>
+    <ng-container *ngIf="ata?.outcome === 'rejected'">A maioria dos moradores votou contra. A pauta foi arquivada e não
+      seguirá em frente.</ng-container>
+    <ng-container *ngIf="ata?.outcome === 'insufficient_votes'">Não houve adesão mínima de moradores para validar o
+      resultado desta assembleia.</ng-container>
+    <ng-container *ngIf="!ata?.outcome">A votação para esta assembleia foi encerrada. O resultado final está sendo
+      contabilizado.</ng-container>
+  </p>
+</section>
+
+<!-- Placar em tempo real -->
+<div class="vote-scoreboard" *ngIf="voteResults">
+  <h4 class="scoreboard-title">Apuração dos Votos</h4>
+  
+  <div class="score-cards">
+    <div class="score-card approve">
+      <span class="material-symbols-outlined">thumb_up</span>
+      <span class="score-value">{{ voteResults.approved }}</span>
+      <span class="score-label">Aprovações</span>
+    </div>
+    
+    <div class="score-card reject">
+      <span class="material-symbols-outlined">thumb_down</span>
+      <span class="score-value">{{ voteResults.rejected }}</span>
+      <span class="score-label">Reprovações</span>
+    </div>
+    
+    <div class="score-card abstain">
+      <span class="material-symbols-outlined">front_hand</span>
+      <span class="score-value">{{ voteResults.abstain }}</span>
+      <span class="score-label">Abstenções</span>
+    </div>
+  </div>
+
+  <div class="score-total">
+    Total de votos computados: <strong>{{ voteResults.total }}</strong>
+  </div>
+</div>
+
   </main>
+  <app-footer [currentTab]="'atas'" *ngIf="authService.currentUser$ | async"></app-footer>
 </div>

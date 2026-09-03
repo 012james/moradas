@@ -4,12 +4,15 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { Ata } from '../../shared/ata.model';
 import { AtasService } from '../../services/assembly/assembly.service';
+import { FooterComponent } from '../../shared/footer/footer.component';
+import { NavComponent } from '../../shared/nav/nav.component';
+import { AuthService } from '../../services/auth/auth.service';
 
 
 @Component({
   selector: 'app-atas-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, FooterComponent, NavComponent],
   templateUrl: './atas-list.component.html',
   styleUrls: ['./atas-list.component.scss']
 })
@@ -22,6 +25,7 @@ export class AtasListComponent implements OnInit {
   currentTab: 'atas' | 'avisos' | 'perfil' = 'atas';
   private atasService = inject(AtasService);
   private router = inject(Router);
+  authService = inject(AuthService);
 
   ngOnInit(): void {
     this.loadAtas();
