@@ -66,4 +66,9 @@ export class AtaCreateComponent {
       this.isSubmitting = false;
     }
   }
+
+  navigateToAprovacoes() {
+    // Navega para a página de aprovações de moradores
+    window.location.href = '/admin/aprovacoes';
+  }
 }

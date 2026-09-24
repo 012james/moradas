@@ -1,0 +1,28 @@
+<div class="approval-container">
+  <h3>Aprovações Pendentes</h3>
+
+  <div *ngIf="pendingUsers.length === 0" class="empty-state">
+    Nenhum morador aguardando aprovação no momento.
+  </div>
+
+  <div class="user-card" *ngFor="let user of pendingUsers">
+    <div class="user-info">
+      <div>
+        <!-- Usando name e street (ajuste se o nome da variável da casa for diferente) -->
+        <strong>{{ user.nome }}</strong>
+        <p>{{ user.email }}</p>
+        <span class="badge-house">{{ user.casaSolicitada }}</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <!-- Usando user.id no click -->
+      <button class="btn-approve" (click)="updateUserStatus(user.uid, 'approved')">
+        Aprovar
+      </button>
+      <button class="btn-reject" (click)="updateUserStatus(user.uid, 'rejected')">
+        Recusar
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { SindicoApprovalComponent } from './features/sindico-approval/sindico-approval.component';
 
 export const routes: Routes = [
   {
@@ -30,6 +31,7 @@ export const routes: Routes = [
     path: 'user',
     loadComponent: () => import('./features/user/user.component').then(m => m.UserComponent)
   },
+  { path: 'admin/aprovacoes', component: SindicoApprovalComponent },
   {
     path: '**',
     redirectTo: 'login'

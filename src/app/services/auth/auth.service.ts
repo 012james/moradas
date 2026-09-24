@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Auth, signInWithPopup, GoogleAuthProvider, User, authState } from '@angular/fire/auth';
 import { Firestore, doc, setDoc, getDoc } from '@angular/fire/firestore';
-import { Observable, switchMap } from 'rxjs';
+import { map, Observable, switchMap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -52,6 +52,11 @@ export class AuthService {
     };
   }
 
+  // Retorna true apenas se for morador aprovado ou síndico
+  canVote$: Observable<boolean> = this.currentUser$.pipe(
+    map(user => user?.status === 'approved')
+  );
+
   // Acionado no botão "Criar Conta" da tela de Cadastro
   async completarCadastro(nomeFormulario: string, rua: string, numeroCasa: string) {
     const user = this.auth.currentUser;
@@ -63,7 +68,7 @@ export class AuthService {
       email: user.email,
       role: 'morador',
       casaSolicitada: `${rua} - ${numeroCasa}`,
-      statusAprovacao: this.userSnapshot.statusAprovacao || 'pendente',
+      status: this.userSnapshot.statusAprovacao || 'pendente',
       unitId: this.userSnapshot.unitId || null,
       createdAt: new Date().toISOString()
     });

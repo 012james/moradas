@@ -9,7 +9,7 @@ export interface UserProfile {
   name: string;
   unit: string;
   email: string;
-  status: 'approved' | 'pending' | 'suspended';
+  status: 'approved' | 'pending' | 'rejected';
   statusLabel?: string;
   avatarUrl?: string;
 }
@@ -42,12 +42,12 @@ export class UserComponent implements OnInit {
     this.user.name = (await user).user?.nome.stringValue || '';
     this.user.email = (await user).user?.email.stringValue || '';
     this.user.unit = (await user).user?.casaSolicitada.stringValue || '' ;
-    this.user.status = (await user).user?.statusAprovacao.stringValue || 'pending'; // This should be fetched from your backend or user data
+    this.user.status = (await user).user?.status.stringValue || 'pending'; // This should be fetched from your backend or user data
 
     const statusLabels: Record<UserProfile['status'], string> = {
       approved: 'Aprovado',
       pending: 'Pendente',
-      suspended: 'Suspenso',
+      rejected: 'Rejeitado',
     };
 
     this.user.statusLabel = statusLabels[this.user.status];

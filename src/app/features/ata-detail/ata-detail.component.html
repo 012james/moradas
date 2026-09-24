@@ -51,7 +51,7 @@
     </section>
 
     <!-- Seção de Votação Interativa -->
-    <section *ngIf="ata?.status === 'open' && !votedOption" class="voting-section" [class.submitting]="isSubmitting">
+    <section *ngIf="(authService.canVote$ | async) && ata?.status === 'open' && !votedOption" class="voting-section" [class.submitting]="isSubmitting">
       <h3 class="voting-heading">Como você vota nesta pauta?</h3>
 
       <div class="voting-buttons">
@@ -96,6 +96,14 @@
           </div>
           <span class="material-symbols-outlined chevron">chevron_right</span>
         </button>
+      </div>
+    </section>
+
+    <!-- Mensagem para moradores não aprovados -->
+    <section *ngIf="(authService.canVote$ | async) === false">
+      <div class="pending-notice">
+        <span class="material-symbols-outlined">hourglass_top</span>
+        <p>Seu perfil precisa ser aprovado pelo síndico para poder votar.</p>
       </div>
     </section>
 

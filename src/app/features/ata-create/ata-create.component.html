@@ -48,5 +48,14 @@
       {{ isSubmitting ? 'Salvando...' : 'Cadastrar Assembleia' }}
     </button>
   </form>
+  
+  <!-- Botão para Aprovar Moradores -->
+  <a (click)="navigateToAprovacoes()" class="admin-card pending-card">
+    <span class="material-symbols-outlined">how_to_reg</span>
+    <div class="card-text">
+      <h3>Aprovar Moradores</h3>
+      <p>Liberar acesso e vincular casas</p>
+    </div>
+  </a>
   <app-footer [currentTab]="'admin'" *ngIf="authService.currentUser$ | async"></app-footer>
 </div>

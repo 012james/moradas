@@ -1,9 +1,10 @@
 export interface UserProfile {
-  id: string;
-  name: string;
+  uid: string;
+  nome: string;
   email: string;
-  street: string;
-  houseNumber: string;
-  avatarUrl?: string;
+  casaSolicitada: string;
   createdAt: string;
+  houseNumber: number; // Número de 1 a 600
+  status: 'pending' | 'approved' | 'rejected';
+  role: 'morador' | 'admin';
 }

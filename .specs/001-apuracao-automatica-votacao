@@ -1,0 +1,20 @@
+# Feature Specification: Apuração Automática e Votação
+
+## 1. Visão Geral
+Implementar o sistema de votação para as assembleias do condomínio, garantindo que apenas moradores aprovados possam votar, limitando a 1 voto por unidade, e realizando o fechamento automático da ata após a data limite.
+
+## 2. Histórias de Usuário (User Stories)
+- **Como morador recém-cadastrado**, quero que meu acesso seja bloqueado para votação até que o síndico valide minha unidade.
+- **Como morador aprovado**, quero poder votar (A Favor, Contra, Abster) em uma assembleia aberta.
+- **Como sistema**, devo calcular automaticamente o resultado (Aprovada/Reprovada/Sem Quórum) no minuto seguinte ao vencimento da ata.
+
+## 3. Critérios de Aceite (Acceptance Criteria)
+- [ ] O botão de voto só deve renderizar se `authService.canVote$ === true`.
+- [ ] O voto deve ser gravado em `assemblies/{id}/votes/{userId}`.
+- [ ] O placar deve ser reativo utilizando `onSnapshot`.
+- [ ] Se a data atual for maior que a `date` da assembleia, o sistema deve atualizar o `status` para `closed` e gerar o `outcome`.
+
+## 4. Design UI/UX
+- **Placar Ativo:** Cards interativos (Verde para aprovação, Vermelho para reprovação).
+- **Aviso de Pendência:** Um banner laranja/amarelo solicitando ao morador que aguarde a aprovação do síndico.
+- **Design System:** Manter botões e bordas arredondadas (12px), sombras suaves e uso de ícones do Material Symbols.
