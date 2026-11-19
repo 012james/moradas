@@ -1,3 +1,5 @@
+import { Timestamp } from "@angular/fire/firestore/public_api";
+
 export type CarrierType = 'Mercado Livre' | 'Shopee' | 'Amazon' | 'Correios' | 'Outros';
 
 export interface PackageItem {
@@ -21,4 +23,5 @@ export interface PackageItem {
   releasedById?: string;
   releasedByName?: string;
   validationMethod?: 'pin' | 'manual';
+  expireAt: Timestamp; // Campo para TTL (Time To Live)
 }

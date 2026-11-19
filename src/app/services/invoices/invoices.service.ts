@@ -11,7 +11,9 @@ import {
   getDocs,
   writeBatch,
   deleteField,
-  onSnapshot
+  onSnapshot,
+  limit,
+  orderBy
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { InvoiceExtraCharge, InvoiceItem } from '../../shared/models/invoice.model';
@@ -289,38 +291,49 @@ export class InvoicesService {
     };
   }
 
+  // Para o Morador: últimos 24 boletos da unidade
   getInvoicesByHouse$(houseNumber: number): Observable<InvoiceItem[]> {
-    return new Observable<InvoiceItem[]>((observer) => {
+    return new Observable((observer) => {
       const q = query(
         collection(this.db, 'invoices'),
-        where('houseNumber', '==', Number(houseNumber))
+        where('houseNumber', '==', Number(houseNumber)),
+        orderBy('createdAt', 'desc'),
+        limit(24)
       );
+
       const unsub = onSnapshot(
         q,
         (snap) => {
-          const list = snap.docs
-            .map((d) => ({ id: d.id, ...d.data() } as unknown as InvoiceItem))
-            .sort((a, b) => b.dueDate.localeCompare(a.dueDate));
-          this.ngZone.run(() => observer.next(list));
+          observer.next(
+            snap.docs.map((d) => ({ id: d.id, ...d.data() }) as InvoiceItem)
+          );
         },
-        (err) => this.ngZone.run(() => observer.error(err))
+        () => observer.next([])
       );
+
       return () => unsub();
     });
   }
 
-  getAllInvoices$(): Observable<InvoiceItem[]> {
-    return new Observable<InvoiceItem[]>((observer) => {
-      const unsub = onSnapshot(
+  // Para Síndico / Secretaria: últimos 600 boletos emitidos
+  getAllInvoices$(maxItems = 600): Observable<InvoiceItem[]> {
+    return new Observable((observer) => {
+      const q = query(
         collection(this.db, 'invoices'),
-        (snap) => {
-          const list = snap.docs
-            .map((d) => ({ id: d.id, ...d.data() } as unknown as InvoiceItem))
-            .sort((a, b) => b.createdAt - a.createdAt);
-          this.ngZone.run(() => observer.next(list));
-        },
-        (err) => this.ngZone.run(() => observer.error(err))
+        orderBy('createdAt', 'desc'),
+        limit(maxItems)
       );
+
+      const unsub = onSnapshot(
+        q,
+        (snap) => {
+          observer.next(
+            snap.docs.map((d) => ({ id: d.id, ...d.data() }) as InvoiceItem)
+          );
+        },
+        () => observer.next([])
+      );
+
       return () => unsub();
     });
   }

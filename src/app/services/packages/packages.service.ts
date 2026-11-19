@@ -9,11 +9,13 @@ import {
   updateDoc,
   query,
   where,
+  orderBy,
+  limit,
+  Timestamp,
   onSnapshot
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { CarrierType, PackageItem } from '../../shared/models/package.model';
-
 
 @Injectable({
   providedIn: 'root'
@@ -27,7 +29,7 @@ export class PackagesService {
     return Math.floor(1000 + Math.random() * 9000).toString();
   }
 
-async registerPackage(
+  async registerPackage(
     data: {
       houseNumber: number;
       recipientName: string;
@@ -37,6 +39,12 @@ async registerPackage(
     operator: UserProfile
   ): Promise<PackageItem> {
     const packagesRef = collection(this.db, 'packages');
+    const oneYearFromNow = new Date();
+    oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+
+    const expirationDate = new Date();
+    expirationDate.setDate(expirationDate.getDate() + 365); // Expira em 1 ano
+
     const newPkg: Omit<PackageItem, 'id'> = {
       houseNumber: Number(data.houseNumber),
       recipientName: data.recipientName.trim(),
@@ -46,15 +54,21 @@ async registerPackage(
       status: 'aguardando',
       receivedAt: Date.now(),
       receivedById: operator.id,
-      receivedByName: operator.name
+      receivedByName: operator.name,
+      expireAt: Timestamp.fromDate(expirationDate) // <-- Campo lido pelo TTL
     };
 
-    const docRef = await addDoc(packagesRef, newPkg);
+    const docRef = await addDoc(packagesRef, {
+      ...newPkg,
+      expireAt: Timestamp.fromDate(oneYearFromNow)
+    });
+
     return {
       id: docRef.id,
       ...newPkg
     };
   }
+
   // Lista em tempo real para a Portaria (apenas pendentes)
   getPendingPackages$(): Observable<PackageItem[]> {
     return new Observable<PackageItem[]>((observer) => {
@@ -80,21 +94,24 @@ async registerPackage(
     });
   }
 
-  // Lista em tempo real para o Morador (aguardando + histórico da casa)
+  // Lista em tempo real para o Morador (30 mais recentes da casa)
   getPackagesByHouse$(houseNumber: number): Observable<PackageItem[]> {
     return new Observable<PackageItem[]>((observer) => {
       const packagesRef = collection(this.db, 'packages');
-      const q = query(packagesRef, where('houseNumber', '==', Number(houseNumber)));
+      const q = query(
+        packagesRef,
+        where('houseNumber', '==', Number(houseNumber)),
+        orderBy('receivedAt', 'desc'),
+        limit(30)
+      );
 
       const unsubscribe = onSnapshot(
         q,
         (snapshot) => {
-          const items = snapshot.docs
-            .map((docSnap) => ({
-              id: docSnap.id,
-              ...docSnap.data()
-            } as unknown as PackageItem))
-            .sort((a, b) => b.receivedAt - a.receivedAt);
+          const items = snapshot.docs.map((docSnap) => ({
+            id: docSnap.id,
+            ...docSnap.data()
+          } as unknown as PackageItem));
 
           this.ngZone.run(() => observer.next(items));
         },

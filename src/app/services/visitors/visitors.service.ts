@@ -12,7 +12,8 @@ import {
   onSnapshot,
   limit,
   orderBy,
-  increment
+  increment,
+  Timestamp
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { VisitorCategory, VisitorAccessType, VisitorAuthorization, VisitorLog } from '../../shared/models/visitor.model';
@@ -120,6 +121,10 @@ export class VisitorsService {
         lastCheckedInBy: operatorName
       });
 
+      // Dentro do addDoc de visitor_logs:
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + 365); // Expira em 1 ano
+
       await addDoc(collection(this.db, 'visitor_logs'), {
         visitorId: visitor.id,
         houseNumber: Number(visitor.houseNumber),
@@ -131,7 +136,8 @@ export class VisitorsService {
         authorizedByName: visitor.authorizedByName || 'Morador',
         checkedInByUid: operator.uid || operator.id || '',
         checkedInByName: operatorName,
-        enteredAt: now
+        enteredAt: now,
+        expireAt: Timestamp.fromDate(expirationDate) // <-- Campo lido pelo TTL
       });
     } catch (err: any) {
       console.error('FALHA AO GRAVAR LOG:', err);
