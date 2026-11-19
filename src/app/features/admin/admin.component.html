@@ -1,0 +1,193 @@
+<div class="app-page" *ngIf="authService.currentUser$ | async as user">
+  <!-- Cabeçalho da Central de Gestão -->
+  <header class="admin-header">
+    <div>
+      <span class="eyebrow">Condomínio Moradas</span>
+      <h1>Central de Gestão</h1>
+    </div>
+
+    <span class="role-badge" [class.sindico]="user.role === 'sindico' || user.role === 'secretaria'">
+      <span class="material-symbols-outlined">
+        {{
+        user.role === 'sindico'
+        ? 'shield_person'
+        : user.role === 'secretaria'
+        ? 'support_agent'
+        : 'local_police'
+        }}
+      </span>
+      {{
+      user.role === 'sindico'
+      ? 'Síndico'
+      : user.role === 'secretaria'
+      ? 'Secretaria'
+      : 'Portaria 24h'
+      }}
+    </span>
+  </header>
+
+  <!-- Resumo Rápido em Tempo Real -->
+  <section class="kpi-strip">
+    <a
+      *appHasRole="['sindico']"
+      routerLink="/admin/aprovacoes"
+      class="kpi-card"
+      [class.has-alert]="(pendingUsersCount$ | async) || 0 > 0"
+    >
+      <span class="kpi-value">{{ (pendingUsersCount$ | async) ?? 0 }}</span>
+      <span class="kpi-label">Aprovações</span>
+    </a>
+
+    <a
+      *appHasRole="['sindico', 'porteiro']"
+      routerLink="/admin/portaria"
+      class="kpi-card"
+    >
+      <span class="kpi-value">{{ (pendingPackagesCount$ | async) ?? 0 }}</span>
+      <span class="kpi-label">Na Portaria</span>
+    </a>
+
+    <a
+      *appHasRole="['sindico']"
+      routerLink="/atas"
+      class="kpi-card"
+    >
+      <span class="kpi-value">{{ (openAssembliesCount$ | async) ?? 0 }}</span>
+      <span class="kpi-label">Votações Abertas</span>
+    </a>
+  </section>
+
+  <!-- BLOCO 1: OPERAÇÃO DA PORTARIA (Porteiro e Síndico) -->
+  <section class="action-group" *appHasRole="['sindico', 'porteiro']">
+    <div class="group-head">
+      <h2>Operação da Portaria</h2>
+      <span>Rotina diária</span>
+    </div>
+
+    <a routerLink="/admin/portaria" class="action-card">
+      <div class="card-icon amber">
+        <span class="material-symbols-outlined">package_2</span>
+      </div>
+      <div class="card-content">
+        <div class="title-row">
+          <h3>Balcão de Encomendas</h3>
+          <span
+            class="count-pill amber"
+            *ngIf="(pendingPackagesCount$ | async) as pkgCount"
+          >
+            {{ pkgCount }} aguardando
+          </span>
+        </div>
+        <p>Registrar pacotes recebidos, gerar PIN e dar baixa na entrega</p>
+      </div>
+      <span class="material-symbols-outlined chevron">chevron_right</span>
+    </a>
+
+    <a routerLink="/admin/visitantes" class="action-card">
+      <div class="card-icon blue">
+        <span class="material-symbols-outlined">badge</span>
+      </div>
+      <div class="card-content">
+        <h3>Visitantes & Liberações</h3>
+        <p>Consultar convidados do dia, lista permanente e registrar entrada</p>
+      </div>
+      <span class="material-symbols-outlined chevron">chevron_right</span>
+    </a>
+  </section>
+
+<!-- BLOCO 2: ADMINISTRAÇÃO DO SÍNDICO e secretaria  (parte financeira e avisos) -->
+  <section class="action-group" *appHasRole="['sindico', 'secretaria']">
+    <div class="group-head">
+      <h2>Operações secretariais</h2>
+      <span>Financeiro</span>
+    </div>
+     <a routerLink="/admin/boletos" class="action-card">
+      <div class="card-icon green">
+        <span class="material-symbols-outlined">receipt_long</span>
+      </div>
+      <div class="card-content">
+        <h3>Mensalidades e Boletos</h3>
+        <p>Emitir individual ou em lote com soma automática de reservas</p>
+      </div>
+      <span class="material-symbols-outlined chevron">chevron_right</span>
+    </a>
+
+    <a routerLink="/avisos" class="action-card">
+      <div class="card-icon amber">
+        <span class="material-symbols-outlined">campaign</span>
+      </div>
+      <div class="card-content">
+        <h3>Mural de Avisos & Comunicados</h3>
+        <p>Publicar alertas urgentes, manutenções e enviar no WhatsApp</p>
+      </div>
+      <span class="material-symbols-outlined chevron">chevron_right</span>
+    </a>
+
+    <a routerLink="/reservas" class="action-card">
+      <div class="card-icon green">
+        <span class="material-symbols-outlined">celebration</span>
+      </div>
+      <div class="card-content">
+        <h3>Agenda Salão & Quiosques</h3>
+        <p>Conferir reservas do dia para controle de chaves e convidados</p>
+      </div>
+      <span class="material-symbols-outlined chevron">chevron_right</span>
+    </a>
+  </section>
+
+  <!-- BLOCO 3: ADMINISTRAÇÃO DO SÍNDICO (Exclusivo Síndico) -->
+  <section class="action-group" *appHasRole="['sindico']">
+    <div class="group-head">
+      <h2>Administração do Síndico</h2>
+      <span>Governança</span>
+    </div>
+
+    <a routerLink="/admin/aprovacoes" class="action-card">
+      <div class="card-icon purple">
+        <span class="material-symbols-outlined">how_to_reg</span>
+      </div>
+      <div class="card-content">
+        <div class="title-row">
+          <h3>Aprovar Moradores & Cargos</h3>
+          <span
+            class="count-pill alert"
+            *ngIf="(pendingUsersCount$ | async) as pendingCount"
+          >
+            {{ pendingCount }} {{ pendingCount === 1 ? 'novo' : 'novos' }}
+          </span>
+        </div>
+        <p>Liberar unidades (1 a 600) e definir porteiros ou síndicos</p>
+      </div>
+      <span class="material-symbols-outlined chevron">chevron_right</span>
+    </a>
+
+    <a routerLink="/admin/nova-ata" class="action-card">
+      <div class="card-icon blue">
+        <span class="material-symbols-outlined">post_add</span>
+      </div>
+      <div class="card-content">
+        <h3>Nova Assembleia / Votação</h3>
+        <p>Abrir pauta oficial, anexar PDF e convocar moradores</p>
+      </div>
+      <span class="material-symbols-outlined chevron">chevron_right</span>
+    </a>
+  </section>
+
+  <!-- Botão de Encerrar Sessão / Troca de Turno -->
+  <section class="session-footer">
+    <div class="logged-info">
+      <span class="material-symbols-outlined">account_circle</span>
+      <span>Conectado como <strong>{{ user.name || user.email }}</strong></span>
+    </div>
+
+    <button
+      type="button"
+      class="btn-admin-logout"
+      [disabled]="isLoggingOut"
+      (click)="logout()"
+    >
+      <span class="material-symbols-outlined">logout</span>
+      {{ isLoggingOut ? 'Saindo da conta...' : 'Sair da Conta' }}
+    </button>
+  </section>
+</div>

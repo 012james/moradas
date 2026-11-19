@@ -1,0 +1,159 @@
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Subscription, firstValueFrom } from 'rxjs';
+import { UserProfile } from '../../shared/models/user.model';
+import { AuthService } from '../../services/auth/auth.service';
+import { VisitorsService } from '../../services/visitors/visitors.service';
+import { VisitorAuthorization, VisitorAccessType, VisitorCategory } from '../../shared/models/visitor.model';
+
+
+@Component({
+  selector: 'app-meus-visitantes',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './meus-visitantes.component.html',
+  styleUrls: ['./meus-visitantes.component.scss']
+})
+export class MeusVisitantesComponent implements OnInit, OnDestroy {
+  public authService = inject(AuthService);
+  private visitorsService = inject(VisitorsService);
+  private userSub?: Subscription;
+  private visSub?: Subscription;
+
+  currentUser: UserProfile | null = null;
+  allHouseVisitors: VisitorAuthorization[] = [];
+
+  activeTab: VisitorAccessType = 'unico';
+
+  // Campos do Formulário
+  visitorName = '';
+  category: VisitorCategory = 'Convidado / Familiar';
+  vehiclePlate = '';
+  visitorDoc = '';
+  validDate = new Date().toISOString().split('T')[0];
+  notes = '';
+
+  readonly categories: VisitorCategory[] = [
+    'Convidado / Familiar',
+    'Prestador de Serviço',
+    'Diarista / Fixo'
+  ];
+  readonly todayStr = new Date().toISOString().split('T')[0];
+
+  isSaving = false;
+  toastMsg = '';
+
+  ngOnInit(): void {
+    this.userSub = this.authService.currentUser$.subscribe((user) => {
+      this.currentUser = user;
+      this.visSub?.unsubscribe();
+
+      if (user?.status === 'approved' && user.houseNumber) {
+        this.visSub = this.visitorsService
+          .getVisitorsByHouse$(user.houseNumber)
+          .subscribe((list) => {
+            this.allHouseVisitors = list;
+          });
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.userSub?.unsubscribe();
+    this.visSub?.unsubscribe();
+  }
+
+  // Liberações avulsas do dia ou futuras (inclui as que entraram hoje para transparência)
+  get dayPasses(): VisitorAuthorization[] {
+    return this.allHouseVisitors.filter(
+      (v) => v.accessType === 'unico' && (v.validDate || '') >= this.todayStr
+    );
+  }
+
+  // Lista fixa de acesso recorrente da casa
+  get permanentList(): VisitorAuthorization[] {
+    return this.allHouseVisitors.filter((v) => v.accessType === 'permanente');
+  }
+
+  switchTab(tab: VisitorAccessType): void {
+    this.activeTab = tab;
+    if (tab === 'permanente') {
+      this.category = 'Diarista / Fixo';
+    } else {
+      this.category = 'Convidado / Familiar';
+    }
+  }
+
+  async onAuthorize(): Promise<void> {
+    if (!this.visitorName.trim()) return;
+    this.isSaving = true;
+
+    try {
+      const user = await firstValueFrom(this.authService.currentUser$);
+      if (!user || user.status !== 'approved') return;
+
+      await this.visitorsService.authorizeVisitor(
+        {
+          visitorName: this.visitorName,
+          visitorDoc: this.visitorDoc,
+          vehiclePlate: this.vehiclePlate,
+          category: this.category,
+          accessType: this.activeTab,
+          validDate: this.validDate,
+          notes: this.notes
+        },
+        user
+      );
+
+      this.toastMsg =
+        this.activeTab === 'unico'
+          ? `${this.visitorName} liberado(a) na portaria!`
+          : `${this.visitorName} adicionado(a) à Lista Permanente da casa!`;
+
+      this.visitorName = '';
+      this.vehiclePlate = '';
+      this.visitorDoc = '';
+      this.notes = '';
+      setTimeout(() => (this.toastMsg = ''), 3500);
+    } finally {
+      this.isSaving = false;
+    }
+  }
+
+  async togglePermanent(item: VisitorAuthorization): Promise<void> {
+    await this.visitorsService.togglePermanentActive(item.id, !item.active);
+  }
+
+  async revokeAccess(id: string): Promise<void> {
+    await this.visitorsService.removeVisitor(id);
+    this.toastMsg = 'Autorização removida da portaria.';
+    setTimeout(() => (this.toastMsg = ''), 3000);
+  }
+
+  sharePassWithGuest(v: VisitorAuthorization): void {
+    const dateLabel =
+      v.accessType === 'permanente'
+        ? 'Acesso Permanente Liberado'
+        : `Data: ${(v.validDate || '').split('-').reverse().join('/')}`;
+
+    const text = [
+      `🏡 *ACESSO LIBERADO — Condomínio Moradas*`,
+      ``,
+      `Olá, *${v.visitorName}*! Sua entrada já está autorizada no sistema da portaria:`,
+      `• *Destino:* Casa ${v.houseNumber} (${this.currentUser?.street || 'Condomínio Moradas'})`,
+      `• *Validade:* ${dateLabel}`,
+      v.vehiclePlate ? `• *Veículo:* ${v.vehiclePlate}` : null,
+      ``,
+      `_Ao chegar na portaria, basta informar seu nome e o número da Casa ${v.houseNumber}._`
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    window.open(
+      `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`,
+      '_blank',
+      'noopener,noreferrer'
+    );
+  }
+}

@@ -1,188 +1,269 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, NgZone } from '@angular/core';
 import { FirebaseApp } from '@angular/fire/app';
-import { getFirestore, collection, query, where, doc, onSnapshot, setDoc, updateDoc, getDocs } from '@angular/fire/firestore';
-import { Observable, of } from 'rxjs';
-import { Ata, VoteChoice } from '../../shared/ata.model';
+import { getAuth } from 'firebase/auth';
+import {
+  getFirestore,
+  collection,
+  doc,
+  getDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot,
+  runTransaction,
+  Timestamp
+} from '@angular/fire/firestore';
+import { Observable } from 'rxjs';
+import { Ata } from '../../shared/models/ata.model';
+import { VoteChoice } from '../AssemblyVoting/AssemblyVoting.service';
+
+
+export interface VoteResultsSummary {
+  approved: number;
+  rejected: number;
+  abstain: number;
+  total: number;
+}
 
 @Injectable({
   providedIn: 'root'
 })
-export class AtasService {
+export class AssemblyService {
   private app = inject(FirebaseApp);
   private db = getFirestore(this.app);
+  private auth = getAuth(this.app);
+  private ngZone = inject(NgZone);
 
-  getActiveAta(): Observable<Ata | null> {
+  // 1. Lista todas as assembleias em tempo real (usado na tela AtasListComponent)
+  getAssemblies$(): Observable<Ata[]> {
+
     return new Observable((observer) => {
-      const atasRef = collection(this.db, 'assemblies');
-      const q = query(atasRef, where('status', '==', 'open'));
-      
-      const unsubscribe = onSnapshot(q, async (snapshot) => {
-        if (!snapshot.empty) {
-          const docSnap = snapshot.docs[0];
-          const data = docSnap.data() as Ata;
-          data.id = docSnap.id;
+      const colRef = collection(this.db, 'assemblies');
 
-          // Se a data expirou, muda para 'closed' no banco e limpa a ata ativa
-          if (this.isAtaExpired(data.date)) {
-            await this.closeAtaAndCalculateOutcome(data.id);
-            observer.next(null);
+      const unsub = onSnapshot(
+        colRef,
+        (snapshot) => {
+          const items = snapshot.docs.map((docSnap) => {
+            const data = docSnap.data() as any;
+            const rawExpires = data.expiresAt?.toDate
+              ? data.expiresAt.toDate()
+              : data.expiresAt
+                ? new Date(data.expiresAt)
+                : data.date
+                  ? new Date(data.date)
+                  : null;
+
+            return {
+              id: docSnap.id,
+              ...data,
+              expiresAt: rawExpires,
+              date: data.date || (rawExpires ? rawExpires.toISOString() : null)
+            } as Ata;
+          });
+
+          items.sort((a: any, b: any) => (b.createdAt || 0) - (a.createdAt || 0));
+          observer.next(items);
+        },
+        (err) => observer.error(err)
+      );
+
+      return () => unsub();
+    });
+
+  }
+
+  // 2. Carrega os detalhes da pauta e identifica se a casa do usuário já votou
+  getAtaById(ataId: string): Observable<Ata | null> {
+    return new Observable<Ata | null>((observer) => {
+      const ataRef = doc(this.db, 'assemblies', ataId);
+
+      const unsub = onSnapshot(
+        ataRef,
+        async (docSnap) => {
+          if (!docSnap.exists()) {
+            this.ngZone.run(() => observer.next(null));
             return;
           }
 
-          observer.next(data);
-        } else {
-          observer.next(null);
-        }
-      }, (error) => observer.error(error));
+          const data = docSnap.data();
+          let userVote: VoteChoice | null = null;
 
-      return () => unsubscribe();
-    });
-  }
-
-  getPastAtas(): Observable<Ata[]> {
-    return new Observable((observer) => {
-      const atasRef = collection(this.db, 'assemblies');
-      // Buscamos todas e filtramos no cliente para evitar exigência de índice composto no Firestore
-      const unsubscribe = onSnapshot(atasRef, (snapshot) => {
-        const atas = snapshot.docs
-          .map(docSnap => {
-            const data = docSnap.data() as Ata;
-            data.id = docSnap.id;
-            return data;
-          })
-          .filter(ata => ata.status !== 'open'); // Pega tudo que não for 'open'
-
-        observer.next(atas);
-      }, (error) => observer.error(error));
-
-      return () => unsubscribe();
-    });
-  }
-
-  getAtaById(id: string): Observable<Ata | null> {
-    return new Observable((observer) => {
-      const docRef = doc(this.db, `assemblies/${id}`);
-      
-      const unsubscribe = onSnapshot(docRef, (docSnap) => {
-        if (docSnap.exists()) {
-          const data = docSnap.data() as Ata;
-          data.id = docSnap.id;
-          observer.next(data);
-        } else {
-          observer.next(null);
-        }
-      }, (error) => observer.error(error));
-
-      return () => unsubscribe();
-    });
-  }
-
- // Registra ou atualiza o voto do usuário
-  async submitVote(ataId: string, userId: string, choice: string, ataDate?: string): Promise<void> {
-    // A chave de segurança: o ID do doc é o userId. 
-    // Garante a regra 1 voto por morador.
-    if (ataDate && this.isAtaExpired(ataDate)) {
-      const docRef = doc(this.db, 'assemblies', ataId);
-      await updateDoc(docRef, { status: 'closed' });
-      throw new Error('Esta votação já foi encerrada.');
-    }
-    const voteRef = doc(this.db, `assemblies/${ataId}/votes/${userId}`);
-    
-    await setDoc(voteRef, {
-      choice: choice,
-      votedAt: new Date().toISOString()
-    });
-  }
-
-  // Retorna a contagem reativa para montar o gráfico ou resultado
- getVoteResults(ataId: string): Observable<{ approved: number, rejected: number, abstain: number, total: number }> {
-    return new Observable((observer) => {
-      // 1. Remove espaços invisíveis ou quebras de linha que possam vir da URL
-      const cleanAtaId = ataId ? ataId.trim() : '';
-
-      // 2. Referência encadeada (método mais seguro da SDK modular)
-      const ataDocRef = doc(this.db, 'assemblies', cleanAtaId);
-      const votesRef = collection(ataDocRef, 'votes');
-
-      const unsubscribe = onSnapshot(votesRef, (snapshot) => {
-
-        let approved = 0;
-        let rejected = 0;
-        let abstain = 0;
-
-        snapshot.forEach(docSnap => {
-          const voteData = docSnap.data();
-          // Normaliza o texto para caixa baixa ignorando espaços
-          const choice = (voteData['choice'] || '').toString().trim().toLowerCase();
-
-          if (choice === 'a favor' || choice === 'aprovar' || choice === 'approved') {
-            approved++;
-          } else if (choice === 'contra' || choice === 'reprovar' || choice === 'rejected') {
-            rejected++;
-          } else if (choice === 'abster' || choice === 'abstain') {
-            abstain++;
+          // Verifica o voto registrado pela unidade (casa) do usuário logado
+          const currentUid = this.auth.currentUser?.uid;
+          if (currentUid) {
+            try {
+              const userSnap = await getDoc(doc(this.db, 'users', currentUid));
+              const houseNumber = userSnap.data()?.['houseNumber'];
+              if (houseNumber) {
+                const voteSnap = await getDoc(
+                  doc(this.db, 'assemblies', ataId, 'votes', String(houseNumber))
+                );
+                if (voteSnap.exists()) {
+                  userVote = (voteSnap.data()['choice'] as VoteChoice) ?? null;
+                }
+              }
+            } catch {
+              // Mantém userVote como null caso o usuário ainda não tenha casa vinculada
+            }
           }
-        });
 
-        observer.next({ approved, rejected, abstain, total: snapshot.size });
-      }, (error) => {
-        observer.error(error);
+          const ataItem = {
+            id: docSnap.id,
+            ...data,
+            userVote
+          } as unknown as Ata;
+
+          this.ngZone.run(() => observer.next(ataItem));
+        },
+        (error) => this.ngZone.run(() => observer.error(error))
+      );
+
+      return () => unsub();
+    });
+  }
+
+  // 3. Escuta o placar consolidado da assembleia em tempo real
+  getVoteResults(ataId: string): Observable<VoteResultsSummary> {
+    return new Observable<VoteResultsSummary>((observer) => {
+      const ataRef = doc(this.db, 'assemblies', ataId);
+
+      const unsub = onSnapshot(
+        ataRef,
+        (docSnap) => {
+          const data = docSnap.data() || {};
+          const approved = Number(data['approvedCount'] ?? data['favorCount'] ?? 0);
+          const rejected = Number(data['rejectedCount'] ?? data['contraCount'] ?? 0);
+          const abstain = Number(data['abstainCount'] ?? data['absterCount'] ?? 0);
+          const total = Number(data['votesCount'] ?? approved + rejected + abstain);
+
+          this.ngZone.run(() =>
+            observer.next({ approved, rejected, abstain, total })
+          );
+        },
+        (error) => this.ngZone.run(() => observer.error(error))
+      );
+
+      return () => unsub();
+    });
+  }
+
+  // 4. Registra ou altera o voto da unidade (1 voto por casa) com transação atômica
+  async submitVote(
+    ataId: string,
+    userId: string,
+    option: VoteChoice
+  ): Promise<void> {
+    const userRef = doc(this.db, 'users', userId);
+    const ataRef = doc(this.db, 'assemblies', ataId);
+
+    await runTransaction(this.db, async (transaction) => {
+      const userSnap = await transaction.get(userRef);
+      if (!userSnap.exists()) {
+        throw new Error('Perfil do morador não encontrado.');
+      }
+
+      const userData = userSnap.data();
+      const houseNumber = Number(userData['houseNumber']);
+      if (userData['status'] !== 'approved' || !houseNumber) {
+        throw new Error('Apenas moradores aprovados podem votar.');
+      }
+
+      const ataSnap = await transaction.get(ataRef);
+      if (!ataSnap.exists()) {
+        throw new Error('Assembleia não encontrada.');
+      }
+
+      const ataData = ataSnap.data();
+      const rawExpires = ataData['expiresAt'];
+      const expiresMs =
+        typeof rawExpires?.toDate === 'function'
+          ? rawExpires.toDate().getTime()
+          : rawExpires
+          ? new Date(rawExpires).getTime()
+          : Date.now() + 86400000;
+
+      if (ataData['status'] === 'closed' || expiresMs <= Date.now()) {
+        throw new Error('O prazo desta votação já foi encerrado.');
+      }
+
+      const voteRef = doc(this.db, 'assemblies', ataId, 'votes', String(houseNumber));
+      const existingVoteSnap = await transaction.get(voteRef);
+
+      let approved = Number(ataData['approvedCount'] ?? ataData['favorCount'] ?? 0);
+      let rejected = Number(ataData['rejectedCount'] ?? ataData['contraCount'] ?? 0);
+      let abstain = Number(ataData['abstainCount'] ?? ataData['absterCount'] ?? 0);
+      let total = Number(ataData['votesCount'] ?? approved + rejected + abstain);
+
+      const normalizedNew = this.normalizeChoice(option);
+
+      if (existingVoteSnap.exists()) {
+        const previousRaw = existingVoteSnap.data()['choice'] as string;
+        const normalizedPrev = this.normalizeChoice(previousRaw);
+
+        if (normalizedPrev === normalizedNew) {
+          return;
+        }
+
+        if (normalizedPrev === 'approved') approved = Math.max(0, approved - 1);
+        if (normalizedPrev === 'rejected') rejected = Math.max(0, rejected - 1);
+        if (normalizedPrev === 'abstain') abstain = Math.max(0, abstain - 1);
+      } else {
+        total += 1;
+      }
+
+      if (normalizedNew === 'approved') approved += 1;
+      if (normalizedNew === 'rejected') rejected += 1;
+      if (normalizedNew === 'abstain') abstain += 1;
+
+      transaction.set(voteRef, {
+        houseNumber,
+        choice: option,
+        voterUid: userId,
+        voterName: userData['name'] || userData['nome'] || `Casa ${houseNumber}`,
+        votedAt: Date.now()
       });
 
-      return () => unsubscribe();
+      transaction.update(ataRef, {
+        votesCount: total,
+        approvedCount: approved,
+        rejectedCount: rejected,
+        abstainCount: abstain,
+        favorCount: approved,
+        contraCount: rejected,
+        absterCount: abstain
+      });
     });
   }
 
-  // Verifica se o dia da ata já passou (considera até às 23:59:59 da data cadastrada)
-  private isAtaExpired(dateStr: string): boolean {
-    if (!dateStr) return false;
-
-    const [year, month, day] = dateStr.split('-').map(Number);
-    const expirationDate = new Date(year, month - 1, day, 23, 59, 59, 999);
-
-    return new Date() > expirationDate;
+  // 5. Métodos auxiliares do Síndico (Criar, Encerrar e Excluir)
+  async createAssembly(payload: Record<string, any>): Promise<string> {
+    const docRef = await addDoc(collection(this.db, 'assemblies'), {
+      ...payload,
+      status: 'open',
+      votesCount: 0,
+      approvedCount: 0,
+      rejectedCount: 0,
+      abstainCount: 0,
+      createdAt: Date.now(),
+      expiresAt:
+        payload['expiresAt'] instanceof Date
+          ? Timestamp.fromDate(payload['expiresAt'])
+          : payload['expiresAt']
+    });
+    return docRef.id;
   }
 
-  // Processa a contagem de votos e encerra a ata definindo o resultado final
-  async closeAtaAndCalculateOutcome(ataId: string): Promise<void> {
-    const ataDocRef = doc(this.db, 'assemblies', ataId);
-    const votesRef = collection(ataDocRef, 'votes');
-    
-    // Busca todos os votos gravados até o momento
-    const snapshot = await getDocs(votesRef);
+  async closeAssembly(ataId: string): Promise<void> {
+    await updateDoc(doc(this.db, 'assemblies', ataId), { status: 'closed' });
+  }
 
-    let approved = 0;
-    let rejected = 0;
-    let abstain = 0;
+  async deleteAssembly(ataId: string): Promise<void> {
+    await deleteDoc(doc(this.db, 'assemblies', ataId));
+  }
 
-    snapshot.forEach(docSnap => {
-      const choice = (docSnap.data()['choice'] || '').toString().trim().toLowerCase();
-      if (choice === 'a favor' || choice === 'aprovar' || choice === 'approved') approved++;
-      else if (choice === 'contra' || choice === 'reprovar' || choice === 'rejected') rejected++;
-      else if (choice === 'abster' || choice === 'abstain') abstain++;
-    });
-
-    const total = snapshot.size;
-    let outcome: 'approved' | 'rejected' | 'insufficient_votes';
-    let statusLabel: string;
-
-    // Regras de decisão do resultado
-    if (total === 0) {
-      outcome = 'insufficient_votes';
-      statusLabel = 'Encerrada (Sem Votos)';
-    } else if (approved > rejected) {
-      outcome = 'approved';
-      statusLabel = 'Aprovada em Assembleia';
-    } else {
-      outcome = 'rejected';
-      statusLabel = 'Reprovada em Assembleia';
-    }
-
-    // Grava o status e o resultado no documento principal da ata
-    await updateDoc(ataDocRef, {
-      status: 'closed',
-      outcome: outcome,
-      statusLabel: statusLabel
-    });
+  private normalizeChoice(choice: string): 'approved' | 'rejected' | 'abstain' {
+    if (choice === 'approved' || choice === 'favor') return 'approved';
+    if (choice === 'rejected' || choice === 'contra') return 'rejected';
+    return 'abstain';
   }
 }

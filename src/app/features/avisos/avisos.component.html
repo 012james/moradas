@@ -1,0 +1,327 @@
+<div class="app-page">
+  <header class="avisos-header">
+    <div>
+      <span class="eyebrow">Comunicação Oficial</span>
+      <h1>Avisos, Contatos & Regras</h1>
+    </div>
+  </header>
+
+  <div class="toast-ok" *ngIf="toastMsg">
+    <span class="material-symbols-outlined">check_circle</span>
+    {{ toastMsg }}
+  </div>
+
+  <!-- Navegação entre as 3 Abas -->
+  <div class="segmented-tabs">
+    <button
+      type="button"
+      [class.active]="activeTab === 'avisos'"
+      (click)="activeTab = 'avisos'"
+    >
+      Mural ({{ notices.length }})
+    </button>
+    <button
+      type="button"
+      [class.active]="activeTab === 'contatos'"
+      (click)="activeTab = 'contatos'"
+    >
+      Contatos
+    </button>
+    <button
+      type="button"
+      [class.active]="activeTab === 'regras'"
+      (click)="activeTab = 'regras'"
+    >
+      Regras
+    </button>
+  </div>
+
+  <!-- =========================================================
+       ABA 1: MURAL DE AVISOS E COMUNICADOS
+       ========================================================= -->
+  <section *ngIf="activeTab === 'avisos'">
+    <ng-container *appHasRole="['sindico', 'secretaria']">
+      <div class="syndic-bar">
+        <button
+          type="button"
+          class="btn-syndic-action"
+          (click)="showNoticeForm = !showNoticeForm"
+        >
+          <span class="material-symbols-outlined">
+            {{ showNoticeForm ? 'close' : 'add_alert' }}
+          </span>
+          {{ showNoticeForm ? 'Cancelar Novo Aviso' : 'Publicar Novo Comunicado' }}
+        </button>
+      </div>
+
+      <section class="editor-drawer" *ngIf="showNoticeForm">
+        <h2>Novo Comunicado para o Condomínio</h2>
+
+        <div class="field">
+          <label>Título do Aviso</label>
+          <input
+            type="text"
+            [(ngModel)]="noticeTitle"
+            placeholder="Ex: Manutenção na caixa d'água neste sábado"
+          />
+        </div>
+
+        <div class="field">
+          <label>Categoria</label>
+          <select [(ngModel)]="noticeCategory">
+            <option value="Comunicado Geral">Comunicado Geral</option>
+            <option value="Manutenção">Manutenção</option>
+            <option value="Urgente">Urgente</option>
+            <option value="Eventos">Eventos</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Mensagem</label>
+          <textarea
+            rows="4"
+            [(ngModel)]="noticeBody"
+            placeholder="Escreva os detalhes, horários e orientações aos moradores..."
+          ></textarea>
+        </div>
+
+        <label class="check-row">
+          <input type="checkbox" [(ngModel)]="sendEmailOnPublish" />
+          <span>Enviar cópia por e-mail para os moradores aprovados</span>
+        </label>
+
+        <button
+          type="button"
+          class="btn-primary-full"
+          [disabled]="isSubmitting || !noticeTitle.trim() || !noticeBody.trim()"
+          (click)="publishNotice()"
+        >
+          {{ isSubmitting ? 'Publicando...' : 'Publicar no Mural' }}
+        </button>
+      </section>
+    </ng-container>
+
+    <div class="empty-box" *ngIf="notices.length === 0">
+      <span class="material-symbols-outlined">campaign</span>
+      <h3>Nenhum aviso publicado</h3>
+      <p>Comunicados da administração e alertas de manutenção aparecerão aqui.</p>
+    </div>
+
+    <article
+      class="notice-card"
+      *ngFor="let n of notices"
+      [class.urgent]="n.category === 'Urgente'"
+    >
+      <div class="notice-top">
+        <span class="cat-pill" [class.urgent]="n.category === 'Urgente'">
+          {{ n.category }}
+        </span>
+        <span class="date-text">{{ n.createdAt | date:'dd/MM/yyyy' }}</span>
+      </div>
+
+      <h3>{{ n.title }}</h3>
+      <p class="notice-body">{{ n.body }}</p>
+
+      <div class="notice-footer">
+        <small>Por {{ n.authorName || 'Administração' }}</small>
+
+        <div class="notice-actions">
+          <button
+            type="button"
+            class="btn-wa-mini"
+            (click)="shareNoticeWhatsApp(n)"
+          >
+            <span class="material-symbols-outlined">chat</span>
+            WhatsApp
+          </button>
+
+          <ng-container *appHasRole="['sindico']">
+            <button
+              type="button"
+              class="btn-del-mini"
+              (click)="deleteNotice(n.id)"
+            >
+              <span class="material-symbols-outlined">delete</span>
+            </button>
+          </ng-container>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- =========================================================
+       ABA 2: CONTATOS DA PORTARIA, SECRETARIA E EMERGÊNCIA
+       ========================================================= -->
+  <section *ngIf="activeTab === 'contatos'">
+    <ng-container *appHasRole="['sindico', 'secretaria']">
+      <div class="syndic-bar">
+        <button
+          type="button"
+          class="btn-syndic-action"
+          (click)="editingContacts ? (editingContacts = false) : startEditContacts()"
+        >
+          <span class="material-symbols-outlined">
+            {{ editingContacts ? 'close' : 'edit' }}
+          </span>
+          {{ editingContacts ? 'Fechar Edição' : 'Editar Telefones' }}
+        </button>
+      </div>
+
+      <section class="editor-drawer" *ngIf="editingContacts">
+        <h2>Atualizar Contatos do Condomínio</h2>
+
+        <div class="field">
+          <label>Telefone / Interfone Portaria 24h</label>
+          <input type="text" [(ngModel)]="contactForm.portariaPhone" placeholder="(34) 3821-0000" />
+        </div>
+
+        <div class="field">
+          <label>WhatsApp da Portaria (somente números com DDD)</label>
+          <input type="text" [(ngModel)]="contactForm.portariaWhatsapp" placeholder="5534999990000" />
+        </div>
+
+        <div class="field">
+          <label>Telefone Secretaria / Administração</label>
+          <input type="text" [(ngModel)]="contactForm.secretariaPhone" placeholder="(34) 3821-0001" />
+        </div>
+
+        <div class="field">
+          <label>WhatsApp da Secretaria (somente números com DDD)</label>
+          <input type="text" [(ngModel)]="contactForm.secretariaWhatsapp" placeholder="5534999990001" />
+        </div>
+
+        <div class="field">
+          <label>Horário de Atendimento da Secretaria</label>
+          <input type="text" [(ngModel)]="contactForm.officeHours" placeholder="Seg a Sex, 08h às 17h" />
+        </div>
+
+        <button
+          type="button"
+          class="btn-primary-full"
+          [disabled]="isSubmitting"
+          (click)="saveContacts()"
+        >
+          {{ isSubmitting ? 'Salvando...' : 'Salvar Contatos' }}
+        </button>
+      </section>
+    </ng-container>
+
+    <article class="contact-card">
+      <div class="c-head">
+        <div class="c-icon blue">
+          <span class="material-symbols-outlined">shield_person</span>
+        </div>
+        <div>
+          <h3>Portaria 24 Horas</h3>
+          <p>{{ contacts.portariaPhone || 'Não cadastrado' }}</p>
+        </div>
+      </div>
+
+      <div class="c-actions" *ngIf="contacts.portariaPhone || contacts.portariaWhatsapp">
+        <a
+          *ngIf="contacts.portariaPhone"
+          [href]="'tel:' + contacts.portariaPhone"
+          class="btn-call"
+        >
+          <span class="material-symbols-outlined">call</span>
+          Ligar
+        </a>
+        <a
+          *ngIf="contacts.portariaWhatsapp"
+          [href]="'https://wa.me/' + contacts.portariaWhatsapp"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-wa-contact"
+        >
+          <span class="material-symbols-outlined">chat</span>
+          WhatsApp
+        </a>
+      </div>
+    </article>
+
+    <article class="contact-card">
+      <div class="c-head">
+        <div class="c-icon green">
+          <span class="material-symbols-outlined">support_agent</span>
+        </div>
+        <div>
+          <h3>Secretaria / Administração</h3>
+          <p>{{ contacts.secretariaPhone || 'Não cadastrado' }}</p>
+          <small *ngIf="contacts.officeHours">{{ contacts.officeHours }}</small>
+        </div>
+      </div>
+
+      <div class="c-actions" *ngIf="contacts.secretariaPhone || contacts.secretariaWhatsapp">
+        <a
+          *ngIf="contacts.secretariaPhone"
+          [href]="'tel:' + contacts.secretariaPhone"
+          class="btn-call"
+        >
+          <span class="material-symbols-outlined">call</span>
+          Ligar
+        </a>
+        <a
+          *ngIf="contacts.secretariaWhatsapp"
+          [href]="'https://wa.me/' + contacts.secretariaWhatsapp"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-wa-contact"
+        >
+          <span class="material-symbols-outlined">chat</span>
+          WhatsApp
+        </a>
+      </div>
+    </article>
+  </section>
+
+  <!-- =========================================================
+       ABA 3: REGRAS E NORMAS DE CONVIVÊNCIA
+       ========================================================= -->
+  <section *ngIf="activeTab === 'regras'">
+    <ng-container *appHasRole="['sindico']">
+      <div class="syndic-bar">
+        <button
+          type="button"
+          class="btn-syndic-action"
+          (click)="editingRules ? (editingRules = false) : startEditRules()"
+        >
+          <span class="material-symbols-outlined">
+            {{ editingRules ? 'close' : 'gavel' }}
+          </span>
+          {{ editingRules ? 'Fechar Edição' : 'Editar Regras Gerais' }}
+        </button>
+      </div>
+
+      <section class="editor-drawer" *ngIf="editingRules">
+        <h2>Editar Normas de Convivência (1 regra por linha)</h2>
+
+        <div class="field">
+          <textarea
+            rows="8"
+            [(ngModel)]="editableRulesText"
+            placeholder="Digite uma regra por linha..."
+          ></textarea>
+        </div>
+
+        <button
+          type="button"
+          class="btn-primary-full"
+          [disabled]="isSubmitting"
+          (click)="saveRules()"
+        >
+          {{ isSubmitting ? 'Salvando...' : 'Salvar Regras' }}
+        </button>
+      </section>
+    </ng-container>
+
+    <article class="rules-card">
+      <h2>Regimento Interno Resumido</h2>
+      <ul class="rules-list">
+        <li *ngFor="let rule of rules">
+          <span class="material-symbols-outlined">check_circle</span>
+          <span>{{ rule }}</span>
+        </li>
+      </ul>
+    </article>
+  </section>
+</div>

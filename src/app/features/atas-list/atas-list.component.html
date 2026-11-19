@@ -1,92 +1,217 @@
-<div class="atas-page">
-    <app-nav></app-nav>
-  <!-- Conteúdo Principal -->
-  <main class="main-content">
-    
-    <!-- Card de Votação em Aberto (Destaque) -->
-    <section *ngIf="activeAta" class="active-voting-card">
-      <div class="card-top">
-        <div class="badge-and-title">
-          <span class="status-badge open">
-            <span class="pulse-dot"></span>
-            Votação em Aberto
-          </span>
-          <h2 class="assembly-title">{{ activeAta.title }}</h2>
-        </div>
-        <span class="material-symbols-outlined vote-icon">how_to_vote</span>
+<div class="app-page">
+  <!-- Cabeçalho Contextual -->
+  <header class="top-header" *ngIf="user$ | async as user">
+    <div class="brand-greeting">
+      <div class="logo-badge">
+        <span class="material-symbols-outlined">home_pin</span>
       </div>
-
-      <p class="assembly-desc">{{ activeAta.description }}</p>
-
-      <div class="card-bottom">
-        <div class="date-info">
-          <span class="material-symbols-outlined calendar-icon">calendar_month</span>
-          <span class="date-text">{{ activeAta.dateFormatted }}</span>
-        </div>
-        <button type="button" class="btn-open-detail" (click)="openAta(activeAta.id)">
-          Abrir
-          <span class="material-symbols-outlined arrow-icon">arrow_forward</span>
-        </button>
+      <div>
+        <span class="sub-label">Condomínio Moradas</span>
+        <h1>Olá, {{ getFirstName(user.name) }}</h1>
       </div>
-    </section>
-
-    <!-- Barra de Pesquisa e Filtro -->
-    <div class="search-bar-row">
-      <div class="search-input-wrapper">
-        <span class="material-symbols-outlined search-icon">search</span>
-        <input 
-          type="text" 
-          [(ngModel)]="searchQuery" 
-          (input)="filterAtas()"
-          placeholder="Pesquisar atas..." 
-          class="search-input"
-        />
-        <button *ngIf="searchQuery" (click)="clearSearch()" class="btn-clear-search">
-          <span class="material-symbols-outlined">close</span>
-        </button>
-      </div>
-      <button type="button" class="btn-filter" (click)="toggleFilter()" [class.active]="filterStatus !== 'all'">
-        <span class="material-symbols-outlined">tune</span>
-      </button>
     </div>
 
-    <!-- Lista de Atas Anteriores -->
-    <section class="previous-atas-section">
-      <div class="section-title-row">
-        <h3 class="section-title">Atas Anteriores</h3>
-        <span class="badge-count">{{ filteredPastAtas.length }}</span>
+    <div class="unit-pill" [class.pending]="user.status !== 'approved'">
+      <span class="dot"></span>
+      Casa {{ user.houseNumber || '--' }} •
+      {{ user.status === 'approved' ? 'Aprovada' : 'Pendente' }}
+    </div>
+  </header>
+
+  <!-- Grade de Serviços Rápidos do Condomínio -->
+  <section class="quick-services-grid">
+    <a routerLink="/visitantes" class="q-service-item">
+      <div class="q-icon blue">
+        <span class="material-symbols-outlined">how_to_reg</span>
+      </div>
+      <span>Liberar Visita</span>
+    </a>
+
+    <a routerLink="/reservas" class="q-service-item">
+      <div class="q-icon green">
+        <span class="material-symbols-outlined">celebration</span>
+      </div>
+      <span>Salão & Quiosques</span>
+    </a>
+
+    <a routerLink="/avisos" class="q-service-item">
+      <div class="q-icon amber">
+        <span class="material-symbols-outlined">campaign</span>
+      </div>
+      <span>Avisos & Regras</span>
+    </a>
+
+    <a routerLink="/perfil" class="q-service-item">
+      <div class="q-icon slate">
+        <span class="material-symbols-outlined">person</span>
+      </div>
+      <span>Minha Casa</span>
+    </a>
+  </section>
+
+  <!-- Botão de Criação de Ata (Exclusivo do Síndico) -->
+  <div class="syndic-create-bar" *appHasRole="['sindico']">
+    <a routerLink="/admin/nova-ata" class="btn-create-ata">
+      <span class="material-symbols-outlined">add_circle</span>
+      Nova Assembleia / Ata
+    </a>
+  </div>
+
+  <!-- Alerta Inteligente de Encomenda -->
+  <a
+    *ngIf="(pendingPackagesCount$ | async) as pkgCount"
+    routerLink="/encomendas"
+    class="parcel-alert-banner"
+  >
+    <div class="alert-left">
+      <span class="material-symbols-outlined">package_2</span>
+      <span>
+        <strong>{{ pkgCount }} {{ pkgCount === 1 ? 'encomenda' : 'encomendas' }}</strong>
+        na portaria
+      </span>
+    </div>
+    <span class="alert-cta">Ver PIN ›</span>
+  </a>
+
+  <!-- Assembleias e Histórico (Apenas Morador Aprovado ou Equipe) -->
+  <ng-container *ngIf="canViewAssemblies$ | async; else pendingApprovalCard">
+    <!-- Card Hero: Assembleia Ativa -->
+    <section class="hero-assembly" *ngFor="let ata of openAtas">
+      <div class="hero-top">
+        <span class="live-pill">
+          <span class="pulse-dot"></span>
+          Votação Aberta
+        </span>
+        <span class="material-symbols-outlined hero-icon">how_to_vote</span>
       </div>
 
-      <div class="atas-list">
-        <article 
-          *ngFor="let ata of filteredPastAtas" 
-          class="past-ata-card" 
-          (click)="openAta(ata.id)">
-          <div class="past-card-header">
-            <span class="date">{{ ata.dateFormatted }}</span>
-            <span class="status-pill" [ngClass]="ata.outcome">
-              <span class="material-symbols-outlined icon">
-                {{ ata.outcome === 'approved' ? 'check_circle' : 'cancel' }}
-              </span>
-              {{ ata.outcome === 'approved' ? 'Aprovada' : ata.outcome === 'rejected' ? 'Reprovada' : ata.outcome === 'insufficient_votes' ? 'Votos Insuficientes' : 'Encerrada' }}
-            </span>
-          </div>
-          <h4 class="past-title">{{ ata.title }}</h4>
-        </article>
+      <h2>{{ ata.title }}</h2>
+      <p class="hero-desc">{{ ata.description }}</p>
 
-        <!-- Mensagem quando não houver resultados -->
-        <div *ngIf="filteredPastAtas.length === 0" class="empty-state">
-          <span class="material-symbols-outlined empty-icon">search_off</span>
-          <p>Nenhuma ata encontrada com "{{ searchQuery }}".</p>
+      <div class="quorum-box">
+        <div class="quorum-labels">
+          <span>Participação do condomínio</span>
+          <strong>{{ ata.votesCount || 0 }} de 600 casas</strong>
+        </div>
+        <div class="quorum-track">
+          <div
+            class="quorum-fill"
+            [style.width.%]="((ata.votesCount || 0) / 600) * 100"
+          ></div>
         </div>
       </div>
 
-      <button *ngIf="filteredPastAtas.length > 0" type="button" class="btn-view-all" (click)="showAllAtas()">
-        Ver todas as atas
-      </button>
+      <div class="hero-footer">
+        <span class="date-tag">
+          <span class="material-symbols-outlined">event</span>
+          {{ ata.date | date:'dd MMM, yyyy' }}
+        </span>
+        <a [routerLink]="['/atas', ata.id]" class="btn-hero">
+          Participar Agora
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </a>
+      </div>
+
+      <!-- Barra de Convocação Rápida (Exclusiva do Síndico) -->
+      <div class="hero-syndic-bar" *appHasRole="['sindico']">
+        <button
+          type="button"
+          class="btn-syndic-wa"
+          (click)="convocarNoWhatsApp(ata)"
+        >
+          <span class="material-symbols-outlined">chat</span>
+          Convocar no WhatsApp
+        </button>
+
+        <button
+          type="button"
+          class="btn-syndic-mail"
+          [disabled]="sendingEmailAtaId === ata.id"
+          (click)="convocarPorEmail(ata)"
+        >
+          <span class="material-symbols-outlined">forward_to_inbox</span>
+          {{ sendingEmailAtaId === ata.id ? 'Carregando...' : 'Enviar nos E-mails' }}
+        </button>
+      </div>
+
+      <div class="hero-mail-toast" *ngIf="emailFeedback">
+        {{ emailFeedback }}
+      </div>
     </section>
 
-  </main>
+    <!-- Busca Rápida -->
+    <div class="search-bar">
+      <span class="material-symbols-outlined">search</span>
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        placeholder="Pesquisar atas ou pautas..."
+      />
+    </div>
 
-  <app-footer [currentTab]="'atas'" *ngIf="authService.currentUser$ | async"></app-footer>
+    <!-- Histórico de Atas -->
+    <section class="history-section">
+      <div class="section-title">
+        <h3>Atas Anteriores</h3>
+        <span class="count-badge">{{ closedAtas.length }}</span>
+      </div>
+
+      <a
+        *ngFor="let item of closedAtas"
+        [routerLink]="['/atas', item.id]"
+        class="history-card"
+      >
+        <div class="history-meta">
+          <span class="history-date">{{ item.date | date:'dd MMM, yyyy' }}</span>
+          <span
+            class="outcome-pill"
+            [ngClass]="{
+              'approved': item.outcome === 'aprovada' || item.outcome === 'approved',
+              'rejected': item.outcome === 'reprovada' || item.outcome === 'rejected'
+            }"
+          >
+            {{
+              item.outcome === 'aprovada' || item.outcome === 'approved'
+                ? '✓ Aprovada'
+                : '✕ Reprovada'
+            }}
+          </span>
+        </div>
+        <h4>{{ item.title }}</h4>
+      </a>
+    </section>
+  </ng-container>
+
+  <!-- Aviso enquanto o cadastro aguarda aprovação do síndico -->
+  <ng-template #pendingApprovalCard>
+    <section class="pending-approval-card" *ngIf="user$ | async as user">
+      <div class="pending-icon">
+        <span class="material-symbols-outlined">hourglass_top</span>
+      </div>
+
+      <span class="pending-pill">
+        {{ user.status === 'rejected' ? 'Cadastro Não Aprovado' : 'Aguardando Aprovação' }}
+      </span>
+
+      <h2>
+        {{
+          user.status === 'rejected'
+            ? 'Acesso restrito às assembleias'
+            : 'Seu cadastro está em análise'
+        }}
+      </h2>
+
+      <p *ngIf="user.status !== 'rejected'">
+        Assim que o síndico validar seu vínculo com a
+        <strong>Casa {{ user.houseNumber }}</strong>, as pautas de votação e atas
+        do condomínio aparecerão automaticamente aqui.
+      </p>
+
+      <p *ngIf="user.status === 'rejected'">
+        O vínculo informado para a <strong>Casa {{ user.houseNumber }}</strong> não
+        foi validado pela administração. Procure a secretaria do condomínio para
+        regularizar seu acesso.
+      </p>
+    </section>
+  </ng-template>
 </div>

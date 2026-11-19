@@ -1,0 +1,211 @@
+<div class="app-page">
+  <header class="vis-header" *ngIf="currentUser">
+    <div>
+      <span class="eyebrow">Portaria Conectada</span>
+      <h1>Meus Visitantes • Casa {{ currentUser.houseNumber }}</h1>
+    </div>
+  </header>
+
+  <div class="toast-ok" *ngIf="toastMsg">
+    <span class="material-symbols-outlined">check_circle</span>
+    {{ toastMsg }}
+  </div>
+
+  <div *ngIf="(authService.canVote$ | async) === false" class="empty-card">
+    <span class="material-symbols-outlined">lock_clock</span>
+    <p>Aguarde a aprovação da sua unidade pelo síndico para liberar visitantes na portaria.</p>
+  </div>
+
+  <ng-container *ngIf="authService.canVote$ | async">
+    <!-- Abas: Liberar no Dia vs Lista Permanente -->
+    <div class="segmented-tabs">
+      <button
+        type="button"
+        [class.active]="activeTab === 'unico'"
+        (click)="switchTab('unico')"
+      >
+        Liberar no Dia ({{ dayPasses.length }})
+      </button>
+
+      <button
+        type="button"
+        [class.active]="activeTab === 'permanente'"
+        (click)="switchTab('permanente')"
+      >
+        Lista Permanente ({{ permanentList.length }})
+      </button>
+    </div>
+
+    <!-- Card de Cadastro Rápido -->
+    <section class="auth-form-card">
+      <h2>
+        {{
+          activeTab === 'unico'
+            ? 'Nova Liberação para o Dia'
+            : 'Adicionar à Lista Sempre Liberada'
+        }}
+      </h2>
+
+      <div class="field">
+        <label>Nome Completo do Visitante ou Prestador</label>
+        <input
+          type="text"
+          [(ngModel)]="visitorName"
+          placeholder="Ex: João Mendes"
+        />
+      </div>
+
+      <div class="field">
+        <label>Perfil da Visita</label>
+        <div class="cat-chips">
+          <button
+            type="button"
+            *ngFor="let c of categories"
+            [class.selected]="category === c"
+            (click)="category = c"
+          >
+            {{ c }}
+          </button>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field" *ngIf="activeTab === 'unico'">
+          <label>Data da Visita</label>
+          <input type="date" [min]="todayStr" [(ngModel)]="validDate" />
+        </div>
+
+        <div class="field" *ngIf="activeTab === 'permanente'">
+          <label>RG ou CPF (Recomendado)</label>
+          <input type="text" [(ngModel)]="visitorDoc" placeholder="Opcional" />
+        </div>
+
+        <div class="field">
+          <label>Placa do Veículo (Opcional)</label>
+          <input
+            type="text"
+            maxlength="8"
+            [(ngModel)]="vehiclePlate"
+            placeholder="ABC-1D23"
+            style="text-transform: uppercase;"
+          />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Observação para o Porteiro (Opcional)</label>
+        <input
+          type="text"
+          [(ngModel)]="notes"
+          [placeholder]="
+            activeTab === 'unico'
+              ? 'Ex: Técnico de internet / Convidado churrasco'
+              : 'Ex: Diarista às terças e sextas'
+          "
+        />
+      </div>
+
+      <button
+        type="button"
+        class="btn-authorize"
+        [disabled]="isSaving || !visitorName.trim()"
+        (click)="onAuthorize()"
+      >
+        <span class="material-symbols-outlined">how_to_reg</span>
+        {{
+          isSaving
+            ? 'Enviando para a Portaria...'
+            : activeTab === 'unico'
+            ? 'Liberar Entrada na Portaria'
+            : 'Salvar na Lista Permanente'
+        }}
+      </button>
+    </section>
+
+    <!-- ==========================================
+         LISTA 1: LIBERAÇÕES DO DIA / AGENDADAS
+         ========================================== -->
+    <section *ngIf="activeTab === 'unico'" class="list-block">
+      <h3>Passes Ativos e Entradas de Hoje</h3>
+
+      <div class="empty-card" *ngIf="dayPasses.length === 0">
+        <p>Nenhum visitante avulso liberado para hoje.</p>
+      </div>
+
+      <article class="pass-card" *ngFor="let v of dayPasses">
+        <div class="pass-top">
+          <div class="tags">
+            <span class="date-tag">{{ v.validDate | date:'dd/MM/yyyy' }}</span>
+            <span class="plate-tag" *ngIf="v.vehiclePlate">🚗 {{ v.vehiclePlate }}</span>
+          </div>
+
+          <span class="entry-status" [class.entered]="!v.active && v.lastEntryAt">
+            {{
+              !v.active && v.lastEntryAt
+                ? '✓ Entrou às ' + (v.lastEntryAt | date:'HH:mm')
+                : 'Aguardando na Portaria'
+            }}
+          </span>
+        </div>
+
+        <h4>{{ v.visitorName }}</h4>
+        <p class="sub-meta">
+          {{ v.category }} {{ v.notes ? '• ' + v.notes : '' }} • Liberado por {{ v.authorizedByName }}
+        </p>
+
+        <div class="pass-actions" *ngIf="v.active">
+          <button type="button" class="btn-wa" (click)="sharePassWithGuest(v)">
+            <span class="material-symbols-outlined">chat</span>
+            Avisar Convidado
+          </button>
+          <button type="button" class="btn-revoke" (click)="revokeAccess(v.id)">
+            Cancelar
+          </button>
+        </div>
+      </article>
+    </section>
+
+    <!-- ==========================================
+         LISTA 2: ACESSO PERMANENTE (SEMPRE LIBERADOS)
+         ========================================== -->
+    <section *ngIf="activeTab === 'permanente'" class="list-block">
+      <h3>Pessoas Sempre Autorizadas na Casa {{ currentUser?.houseNumber }}</h3>
+
+      <div class="empty-card" *ngIf="permanentList.length === 0">
+        <p>Cadastre familiares, diaristas ou prestadores fixos que não precisam de aviso diário.</p>
+      </div>
+
+      <article
+        class="pass-card permanent"
+        *ngFor="let p of permanentList"
+        [class.paused]="!p.active"
+      >
+        <div class="pass-top">
+          <div class="tags">
+            <span class="perm-tag">
+              {{ p.active ? 'Acesso Permanente Ativo' : 'Pausado Temporariamente' }}
+            </span>
+            <span class="plate-tag" *ngIf="p.vehiclePlate">🚗 {{ p.vehiclePlate }}</span>
+          </div>
+        </div>
+
+        <h4>{{ p.visitorName }}</h4>
+        <p class="sub-meta">
+          {{ p.category }} {{ p.notes ? '• ' + p.notes : '' }}
+        </p>
+        <small class="last-entry" *ngIf="p.lastEntryAt">
+          Última entrada registrada: {{ p.lastEntryAt | date:'dd/MM às HH:mm' }} (Porteiro {{ p.lastCheckedInBy }})
+        </small>
+
+        <div class="pass-actions">
+          <button type="button" class="btn-pause" (click)="togglePermanent(p)">
+            {{ p.active ? 'Pausar Acesso' : 'Reativar Acesso' }}
+          </button>
+          <button type="button" class="btn-revoke" (click)="revokeAccess(p.id)">
+            Excluir da Lista
+          </button>
+        </div>
+      </article>
+    </section>
+  </ng-container>
+</div>

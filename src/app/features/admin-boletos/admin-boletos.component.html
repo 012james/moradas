@@ -1,0 +1,258 @@
+<div class="app-page">
+  <header class="top-bar">
+    <div>
+      <a routerLink="/admin" class="back-link">
+        <span class="material-symbols-outlined">arrow_back_ios_new</span>
+        Painel de Gestão
+      </a>
+      <h1>Gestão de Boletos</h1>
+    </div>
+
+    <span class="badge-pill">Mensalidades</span>
+  </header>
+
+  <div class="toast-ok" *ngIf="toastMsg">
+    <span class="material-symbols-outlined">check_circle</span>
+    {{ toastMsg }}
+  </div>
+
+  <!-- Card de Lançamento (Individual vs Lote em 1 Clique) -->
+  <section class="emit-card">
+    <div class="mode-switcher">
+      <button
+        type="button"
+        [class.active]="emitMode === 'individual'"
+        (click)="emitMode = 'individual'"
+      >
+        <span class="material-symbols-outlined">person</span>
+        Individual (1 Casa)
+      </button>
+
+      <button
+        type="button"
+        [class.active]="emitMode === 'lote'"
+        (click)="emitMode = 'lote'"
+      >
+        <span class="material-symbols-outlined">holiday_village</span>
+        Lote Mensal (Todas)
+      </button>
+    </div>
+
+    <!-- ==========================================
+         MODO 1: EMISSÃO INDIVIDUAL (1 UNIDADE)
+         ========================================== -->
+    <ng-container *ngIf="emitMode === 'individual'">
+      <div class="grid-house-name">
+        <div class="field">
+          <label>Casa (1-600)</label>
+          <input
+            type="number"
+            min="1"
+            max="600"
+            [(ngModel)]="houseNumber"
+            (ngModelChange)="onHouseChange()"
+            placeholder="402"
+          />
+        </div>
+
+        <div class="field">
+          <label>Morador Titular</label>
+          <input
+            type="text"
+            [(ngModel)]="recipientName"
+            placeholder="Ex: Maria Silva"
+          />
+        </div>
+      </div>
+
+      <div class="resident-chips" *ngIf="houseResidents.length > 0">
+        <button
+          type="button"
+          *ngFor="let r of houseResidents"
+          (click)="recipientName = r.name"
+        >
+          <span class="material-symbols-outlined">person</span>
+          {{ r.name }} {{ r.phone ? '• 📱' : '' }}
+        </button>
+      </div>
+
+      <div class="unbilled-res-box" *ngIf="pendingHouseReservations.length > 0">
+        <div class="unbilled-head">
+          <span class="material-symbols-outlined">celebration</span>
+          <strong>
+            {{ pendingHouseReservations.length }} reserva(s) pendente(s) na Casa {{ houseNumber }}
+          </strong>
+        </div>
+
+        <ul class="unbilled-list">
+          <li *ngFor="let r of pendingHouseReservations">
+            <span>{{ r.spaceName }} ({{ r.date | date:'dd/MM/yyyy' }})</span>
+            <strong>+ {{ r.feeSnapshot | currency:'BRL':'symbol':'1.2-2' }}</strong>
+          </li>
+        </ul>
+
+        <label class="include-res-check">
+          <input type="checkbox" [(ngModel)]="includeExtrasIndividual" />
+          <span>
+            Somar no boleto → Total final:
+            <strong>{{ finalIndividualPreview | currency:'BRL':'symbol':'1.2-2' }}</strong>
+          </span>
+        </label>
+      </div>
+
+      <div class="grid-3">
+        <div class="field">
+          <label>Mês de Referência</label>
+          <input type="text" [(ngModel)]="referenceMonth" placeholder="Dezembro / 2026" />
+        </div>
+
+        <div class="field">
+          <label>Valor (R$)</label>
+          <input type="number" step="0.01" [(ngModel)]="amount" />
+        </div>
+
+        <div class="field">
+          <label>Vencimento</label>
+          <input type="date" [(ngModel)]="dueDate" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Linha Digitável (Código de Barras)</label>
+        <input
+          type="text"
+          [(ngModel)]="barcode"
+          placeholder="00190.00009 01234.567890..."
+        />
+      </div>
+
+      <div class="field">
+        <label>Código Pix Copia e Cola (Opcional)</label>
+        <input
+          type="text"
+          [(ngModel)]="pixCode"
+          placeholder="00020126580014br.gov.bcb.pix..."
+        />
+      </div>
+
+      <div class="field">
+        <label>Link do Boleto em PDF (Opcional)</label>
+        <input
+          type="url"
+          [(ngModel)]="pdfUrl"
+          placeholder="https://drive.google.com/..."
+        />
+      </div>
+
+      <label class="wa-toggle">
+        <input type="checkbox" [(ngModel)]="openWhatsAppAfterSave" />
+        <span>
+          Disparar <strong>E-mail automático</strong> e abrir <strong>WhatsApp</strong> do morador ao salvar
+        </span>
+      </label>
+
+      <button
+        type="button"
+        class="btn-emit"
+        [disabled]="isSubmitting || !houseNumber || !recipientName.trim() || !dueDate || !barcode.trim()"
+        (click)="onEmitInvoice()"
+      >
+        <span class="material-symbols-outlined">send</span>
+        {{ isSubmitting ? 'Enviando...' : 'Salvar + Enviar (E-mail e WhatsApp)' }}
+      </button>
+    </ng-container>
+
+    <!-- ==========================================
+         MODO 2: LANÇAMENTO EM LOTE (TODAS AS CASAS APROVADAS)
+         ========================================== -->
+    <ng-container *ngIf="emitMode === 'lote'">
+      <div class="batch-info-banner">
+        <span class="material-symbols-outlined">auto_awesome</span>
+        <p>
+          Gera a mensalidade automaticamente para <strong>todas as casas com moradores aprovados</strong>.
+          Unidades que já tiveram o boleto deste mês lançado serão ignoradas sem duplicar.
+        </p>
+      </div>
+
+      <div class="grid-3">
+        <div class="field">
+          <label>Mês de Referência</label>
+          <input type="text" [(ngModel)]="referenceMonth" placeholder="Dezembro / 2026" />
+        </div>
+
+        <div class="field">
+          <label>Valor Fixo (R$)</label>
+          <input type="number" step="0.01" [(ngModel)]="amount" />
+        </div>
+
+        <div class="field">
+          <label>Vencimento Padrão</label>
+          <input type="date" [(ngModel)]="dueDate" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Pix Copia e Cola ou Chave Pix Oficial do Condomínio</label>
+        <input
+          type="text"
+          [(ngModel)]="pixCode"
+          placeholder="Cole o Pix Copia e Cola padrão ou CNPJ do condomínio"
+        />
+      </div>
+
+      <div class="field">
+        <label>Instrução / Linha Digitável Geral (Opcional)</label>
+        <input
+          type="text"
+          [(ngModel)]="barcode"
+          placeholder="Ex: Pagamento via Pix ou retire a 2ª via impressa na Secretaria"
+        />
+      </div>
+
+      <div class="field">
+        <label>Descrição na Fatura</label>
+        <input
+          type="text"
+          [(ngModel)]="notes"
+          placeholder="Ex: Taxa condominial ordinária + Fundo de Reserva"
+        />
+      </div>
+
+      <div class="unbilled-res-box">
+        <label class="include-res-check" style="margin-bottom: 0.5rem;">
+          <input type="checkbox" [(ngModel)]="includeExtrasInBatch" />
+          <span>
+            <strong>Somar automaticamente reservas de Salão e Quiosques</strong> ainda não cobradas
+            na fatura de cada casa
+          </span>
+        </label>
+
+        <div class="field" *ngIf="includeExtrasInBatch" style="margin-bottom: 0;">
+          <label>Data de corte das reservas (Opcional — vazio inclui todas as confirmadas)</label>
+          <input type="date" [(ngModel)]="reservationsCutoffDate" />
+        </div>
+      </div>
+
+      <label class="wa-toggle">
+        <input type="checkbox" [(ngModel)]="sendBatchEmailOnGenerate" />
+        <span>
+          Registrar disparo de <strong>E-mail em Lote (Cópia Oculta)</strong> para todas as casas geradas
+        </span>
+      </label>
+
+      <button
+        type="button"
+        class="btn-emit batch-btn"
+        [disabled]="isSubmitting || !referenceMonth.trim() || !dueDate || !amount"
+        (click)="onEmitBulkInvoices()"
+      >
+        <span class="material-symbols-outlined">bolt</span>
+        {{
+          isSubmitting
+            ? 'Processando Lote das Unidades...'
+            : 'Gerar Mensalidade para Todas as Casas Aprovadas'
+        }}
+      </button>
+    </ng-container>
+  </section>
+</div>

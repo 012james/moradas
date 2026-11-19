@@ -1,46 +1,73 @@
-.bottom-nav {
+.floating-dock {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background-color: #ffffff;
-  border-top: 1px solid #e0e0e0;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 1.5rem);
+  max-width: 480px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 22px;
+  padding: 0.4rem 0.45rem;
   display: flex;
   justify-content: space-around;
-  align-items: center;
-  padding: 0.5rem 0;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.14);
   z-index: 1000;
-  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)); // Adapta para iPhones sem botão
-}
 
-.nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-decoration: none;
-  color: #757575;
-  font-size: 0.75rem;
-  transition: color 0.2s;
-  min-width: 64px;
-
-  .material-symbols-outlined {
-    font-size: 24px;
-    margin-bottom: 2px;
-  }
-
-  &.active {
-    color: #0056b3; // Cor primária do seu app
-    font-weight: 600;
+  .dock-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 0.38rem 0.15rem;
+    border-radius: 14px;
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+    transition: all 0.18s ease;
 
     .material-symbols-outlined {
-      font-variation-settings: 'FILL' 1; // Preenche o ícone se estiver ativo
+      font-size: 1.35rem;
     }
-  }
-}
 
-.admin-item {
-  &.active {
-    color: #d97706; // Cor de destaque para diferenciar o menu restrito
+    .icon-wrap {
+      position: relative;
+      display: inline-flex;
+    }
+
+    .badge {
+      position: absolute;
+      top: -5px;
+      right: -9px;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      background: #ef4444;
+      color: #ffffff;
+      border-radius: 999px;
+      font-size: 0.65rem;
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+      border: 2px solid #ffffff;
+
+      &.amber {
+        background: #d97706;
+      }
+    }
+
+    &.active {
+      background: #eff6ff;
+      color: var(--brand-primary);
+    }
+
+    &.staff-tab.active {
+      background: #dbeafe;
+      color: #1e40af;
+    }
   }
 }

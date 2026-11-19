@@ -1,0 +1,254 @@
+<div class="app-page">
+  <header class="res-header">
+    <div>
+      <span class="eyebrow">Áreas de Lazer</span>
+      <h1>Salão & Quiosques</h1>
+    </div>
+
+    <button *appHasRole="['sindico']" type="button" class="btn-edit-rules"
+      (click)="editingConfig ? (editingConfig = false) : startEditingSpaces()">
+      <span class="material-symbols-outlined">
+        {{ editingConfig ? 'close' : 'tune' }}
+      </span>
+      {{ editingConfig ? 'Fechar Edição' : 'Valores e Regras' }}
+    </button>
+  </header>
+
+  <div class="toast-ok" *ngIf="toastMsg">
+    <span class="material-symbols-outlined">check_circle</span>
+    {{ toastMsg }}
+  </div>
+
+  <!-- =========================================================
+       PAINEL DO SÍNDICO: EDITAR TAXAS, HORÁRIOS E REGRAS IN-APP
+       ========================================================= -->
+  <ng-container *appHasRole="['sindico']">
+    <section class="editor-card" *ngIf="editingConfig">
+      <h2>Configurar Valores e Regras de Uso</h2>
+
+      <div class="space-edit-block" *ngFor="let sp of editableSpaces">
+        <h3>{{ sp.name }}</h3>
+
+        <div class="grid-3">
+          <div class="field">
+            <label>Taxa (R$)</label>
+            <input type="number" step="0.01" [(ngModel)]="sp.fee" />
+          </div>
+          <div class="field">
+            <label>Capacidade</label>
+            <input type="number" [(ngModel)]="sp.capacity" />
+          </div>
+          <div class="field">
+            <label>Cancelamento (h)</label>
+            <input type="number" [(ngModel)]="sp.cancellationHours" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Horário Permitido</label>
+          <input type="text" [(ngModel)]="sp.hours" />
+        </div>
+
+        <div class="field">
+          <label>Regras do Espaço (1 regra por linha)</label>
+          <textarea rows="4" [(ngModel)]="editableRulesText[sp.id]"></textarea>
+        </div>
+      </div>
+
+      <button type="button" class="btn-primary-full" [disabled]="isSubmitting" (click)="saveSpacesSettings()">
+        {{ isSubmitting ? 'Salvando...' : 'Salvar Valores e Regras' }}
+      </button>
+    </section>
+  </ng-container>
+
+  <!-- Navegação Principal -->
+  <ng-container *ngIf="!editingConfig">
+    <div class="segmented-tabs">
+      <button type="button" [class.active]="viewTab === 'reservar'" (click)="viewTab = 'reservar'">
+        Nova Reserva
+      </button>
+      <button type="button" [class.active]="viewTab === 'minhas'" (click)="viewTab = 'minhas'">
+        Minhas ({{ myHouseReservations.length }})
+      </button>
+      <button *appHasRole="['porteiro', 'sindico']" type="button" [class.active]="viewTab === 'agenda_portaria'"
+        (click)="viewTab = 'agenda_portaria'">
+        Agenda ({{ allReservations.length }})
+      </button>
+    </div>
+
+    <!-- =========================================================
+         ABA 1: SELECIONAR ESPAÇO, VER REGRAS E RESERVAR
+         ========================================================= -->
+    <section *ngIf="viewTab === 'reservar'">
+      <!-- Cards Seletores dos 3 Espaços -->
+      <div class="spaces-selector">
+        <button type="button" class="space-card-btn" *ngFor="let s of spaces"
+          [class.selected]="selectedSpaceId === s.id" (click)="selectSpace(s.id)">
+          <span class="material-symbols-outlined sp-icon">{{ s.icon }}</span>
+          <strong>{{ s.name }}</strong>
+          <span class="sp-price">{{ s.fee | currency:'BRL':'symbol':'1.2-2' }}</span>
+          <small>Até {{ s.capacity }} pessoas</small>
+        </button>
+      </div>
+
+      <!-- Card Detalhado de Regras e Valores do Espaço Escolhido -->
+      <article class="rules-spec-card" *ngIf="activeSpace as sp">
+        <div class="spec-header">
+          <div>
+            <h2>{{ sp.name }}</h2>
+            <span class="spec-sub">
+              <span class="material-symbols-outlined">schedule</span>
+              Uso das {{ sp.hours }} • Máx. {{ sp.capacity }} convidados
+            </span>
+          </div>
+
+          <div class="price-badge">
+            <small>Taxa de Reserva</small>
+            <strong>{{ sp.fee | currency:'BRL':'symbol':'1.2-2' }}</strong>
+          </div>
+        </div>
+
+        <div class="rules-box">
+          <h3>
+            <span class="material-symbols-outlined">gavel</span>
+            Regras Obrigatórias e Condições
+          </h3>
+          <ul>
+            <li *ngFor="let r of sp.rules">{{ r }}</li>
+          </ul>
+        </div>
+
+        <!-- Datas já ocupadas neste espaço -->
+        <div class="occupied-strip" *ngIf="occupiedDatesForActiveSpace.length > 0">
+          <small>Próximas datas já reservadas neste espaço:</small>
+          <div class="occ-pills">
+            <span *ngFor="let occ of occupiedDatesForActiveSpace">
+              {{ occ.date | date:'dd/MM' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Bloqueio caso morador ainda esteja pendente -->
+        <div *ngIf="(authService.canVote$ | async) === false" class="pending-lock">
+          <span class="material-symbols-outlined">lock_clock</span>
+          Aguarde a aprovação da sua unidade pelo síndico para reservar áreas comuns.
+        </div>
+
+        <!-- Formulário de Data + Aceite do Termo -->
+        <div class="booking-form" *ngIf="authService.canVote$ | async">
+          <div class="date-row">
+            <div class="field" style="flex: 1; margin: 0;">
+              <label>Escolha a Data do Evento</label>
+              <input type="date" [min]="minDate" [(ngModel)]="selectedDate" />
+            </div>
+
+            <div class="availability-pill" *ngIf="selectedDate">
+              <span class="avail-tag" [class.busy]="!!conflictReservation">
+                {{
+                conflictReservation
+                ? '✕ Data Indisponível'
+                : '✓ Data Disponível'
+                }}
+              </span>
+            </div>
+          </div>
+
+          <label class="terms-check" *ngIf="selectedDate && !conflictReservation">
+            <input type="checkbox" [(ngModel)]="acceptedTerms" />
+            <span>
+              Li e concordo com as regras de convivência, limpeza e autorizo a cobrança da taxa de
+              <strong>{{ sp.fee | currency:'BRL':'symbol':'1.2-2' }}</strong> para a
+              <strong>Casa {{ currentUser?.houseNumber }}</strong>.
+            </span>
+          </label>
+
+          <div class="error-box" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+          <button type="button" class="btn-primary-full" [disabled]="
+              isSubmitting ||
+              !selectedDate ||
+              !!conflictReservation ||
+              !acceptedTerms
+            " (click)="onConfirmReservation()">
+            <span class="material-symbols-outlined">event_available</span>
+            {{ isSubmitting ? 'Confirmando...' : 'Confirmar Reserva da Unidade' }}
+          </button>
+        </div>
+      </article>
+    </section>
+
+    <!-- =========================================================
+         ABA 2: MINHAS RESERVAS (UNIDADE DO MORADOR)
+         ========================================================= -->
+    <section *ngIf="viewTab === 'minhas'">
+      <div class="empty-box" *ngIf="myHouseReservations.length === 0">
+        <span class="material-symbols-outlined">event_busy</span>
+        <h3>Nenhuma reserva futura</h3>
+        <p>Os agendamentos ativos da sua casa aparecerão aqui.</p>
+      </div>
+
+      <article class="my-res-card" *ngFor="let item of myHouseReservations">
+        <div class="res-top">
+          <div>
+            <span class="date-badge">{{ item.date | date:'dd/MM/yyyy' }}</span>
+            <h3>{{ item.spaceName }}</h3>
+          </div>
+          <strong class="fee-tag">
+            {{ item.feeSnapshot | currency:'BRL':'symbol':'1.2-2' }}
+          </strong>
+        </div>
+
+        <p class="res-meta">
+          Reservado por <strong>{{ item.residentName }}</strong> (Casa {{ item.houseNumber }})
+        </p>
+
+        <div class="res-actions">
+          <button type="button" class="btn-wa-voucher" (click)="shareVoucherOnWhatsApp(item)">
+            <span class="material-symbols-outlined">chat</span>
+            Comprovante WhatsApp
+          </button>
+
+          <button type="button" class="btn-cancel-res" [disabled]="!canCancel(item)"
+            (click)="onCancelReservation(item)">
+            {{ canCancel(item) ? 'Cancelar Reserva' : 'Fora do Prazo' }}
+          </button>
+        </div>
+      </article>
+    </section>
+
+    <!-- =========================================================
+         ABA 3: AGENDA GERAL (PORTARIA E SÍNDICO — CONTROLE DE CHAVES)
+         ========================================================= -->
+    <ng-container *appHasRole="['porteiro', 'sindico']">
+      <section *ngIf="viewTab === 'agenda_portaria'">
+        <div class="empty-box" *ngIf="allReservations.length === 0">
+          <p>Nenhum espaço reservado para os próximos dias.</p>
+        </div>
+
+        <article class="my-res-card" *ngFor="let r of allReservations">
+          <div class="res-top">
+            <div>
+              <span class="date-badge">{{ r.date | date:'dd/MM/yyyy' }}</span>
+              <span class="house-chip">Casa {{ r.houseNumber }}</span>
+              <h3>{{ r.spaceName }}</h3>
+            </div>
+            <strong class="fee-tag">
+              {{ r.feeSnapshot | currency:'BRL':'symbol':'1.2-2' }}
+            </strong>
+          </div>
+
+          <p class="res-meta">
+            Responsável: <strong>{{ r.residentName }}</strong>
+            {{ r.residentPhone ? '• 📱 ' + r.residentPhone : '' }}
+          </p>
+
+          <div class="res-actions" *appHasRole="['sindico']">
+            <button type="button" class="btn-cancel-res" (click)="onCancelReservation(r)">
+              Liberar Data (Síndico)
+            </button>
+          </div>
+        </article>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>

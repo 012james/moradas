@@ -1,0 +1,230 @@
+<div class="app-page">
+  <header class="gate-header">
+    <div>
+      <a routerLink="/admin" class="back-link">
+        <span class="material-symbols-outlined">arrow_back_ios_new</span>
+        Painel
+      </a>
+      <h1>Controle de Visitantes</h1>
+    </div>
+
+    <span class="live-badge">
+      <span class="dot"></span>
+      Guarita 24h
+    </span>
+  </header>
+
+  <!-- Busca Instantânea por Casa, Nome ou Placa -->
+  <div class="gate-filter-row">
+    <div class="house-filter-box" [class.active]="houseFilter !== null">
+      <span class="material-symbols-outlined">home</span>
+      <input
+        type="number"
+        min="1"
+        max="600"
+        [(ngModel)]="houseFilter"
+        placeholder="Casa"
+        aria-label="Filtrar por número da casa"
+      />
+      <button
+        *ngIf="houseFilter !== null"
+        type="button"
+        class="clear-btn"
+        (click)="houseFilter = null"
+        aria-label="Limpar filtro da casa"
+      >
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <div class="gate-search-box">
+      <span class="material-symbols-outlined">search</span>
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        placeholder="Nome, Placa ou Porteiro..."
+      />
+      <button
+        *ngIf="searchTerm"
+        type="button"
+        class="clear-btn"
+        (click)="searchTerm = ''"
+      >
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtros em Grade 2x2 (Sem barra de rolagem) -->
+  <div class="filter-pills">
+    <button
+      type="button"
+      [class.active]="filterMode === 'todos_hoje'"
+      (click)="filterMode = 'todos_hoje'"
+    >
+      Válidos Hoje ({{ validTodayCount }})
+    </button>
+    <button
+      type="button"
+      [class.active]="filterMode === 'unico'"
+      (click)="filterMode = 'unico'"
+    >
+      Avulsos do Dia ({{ singleTodayCount }})
+    </button>
+    <button
+      type="button"
+      [class.active]="filterMode === 'permanente'"
+      (click)="filterMode = 'permanente'"
+    >
+      Lista Permanente ({{ permanentCount }})
+    </button>
+    <button
+      type="button"
+      [class.active]="filterMode === 'historico'"
+      (click)="filterMode = 'historico'"
+    >
+      Histórico Geral ({{ allLogs.length }})
+    </button>
+  </div>
+
+  <div class="toast-ok" *ngIf="toastMsg">
+    <span class="material-symbols-outlined">verified</span>
+    {{ toastMsg }}
+  </div>
+
+  <!-- =====================================================
+       VISÃO 1: AUTORIZAÇÕES ATIVAS PARA DAR ENTRADA
+       ===================================================== -->
+  <ng-container *ngIf="filterMode !== 'historico'">
+    <div class="empty-gate" *ngIf="filteredList.length === 0">
+      <span class="material-symbols-outlined">person_off</span>
+      <h3>Nenhuma liberação encontrada</h3>
+      <p>Se o visitante não constar na lista, interfone para o morador da casa antes de liberar.</p>
+    </div>
+
+    <article
+      class="gate-card"
+      *ngFor="let v of filteredList"
+      [class.permanent]="v.accessType === 'permanente'"
+    >
+      <div class="gate-card-top">
+        <div class="badge-group">
+          <span class="house-pill">Casa {{ v.houseNumber }}</span>
+          <span
+            class="type-pill"
+            [class.perm]="v.accessType === 'permanente'"
+          >
+            {{ v.accessType === 'permanente' ? '∞ Permanente' : 'Liberado Hoje' }}
+          </span>
+          <span class="plate-pill" *ngIf="v.vehiclePlate">
+            🚗 {{ v.vehiclePlate }}
+          </span>
+        </div>
+      </div>
+
+      <div class="gate-main">
+        <div class="guest-details">
+          <h3>{{ v.visitorName || v.category || 'Visitante Avulso' }}</h3>
+          <p>
+            {{ v.category }}
+            <span *ngIf="v.visitorDoc">• Doc: {{ v.visitorDoc }}</span>
+            <span *ngIf="v.notes">• {{ v.notes }}</span>
+          </p>
+          <small>Autorizado por {{ v.authorizedByName }}</small>
+        </div>
+
+        <button
+          type="button"
+          class="btn-checkin"
+          [disabled]="processingId === v.id"
+          (click)="confirmEntry(v)"
+        >
+          <span class="material-symbols-outlined">login</span>
+          Registrar Entrada
+        </button>
+      </div>
+    </article>
+  </ng-container>
+
+  <!-- =====================================================
+       VISÃO 2: HISTÓRICO DEFINITIVO DE ACESSOS (visitor_logs)
+       ===================================================== -->
+  <ng-container *ngIf="filterMode === 'historico'">
+    <div class="history-filter-bar">
+      <div class="date-presets">
+        <button
+          type="button"
+          [class.active]="historyDatePreset === 'todos'"
+          (click)="selectDatePreset('todos')"
+        >
+          Todos
+        </button>
+        <button
+          type="button"
+          [class.active]="historyDatePreset === 'hoje'"
+          (click)="selectDatePreset('hoje')"
+        >
+          Hoje
+        </button>
+        <button
+          type="button"
+          [class.active]="historyDatePreset === 'ontem'"
+          (click)="selectDatePreset('ontem')"
+        >
+          Ontem
+        </button>
+      </div>
+
+      <input
+        type="date"
+        class="date-picker-input"
+        [ngModel]="customHistoryDate"
+        (ngModelChange)="onCustomDateChange($event)"
+        aria-label="Filtrar por data"
+      />
+    </div>
+
+    <div class="history-summary-line">
+      <span>{{ filteredLogs.length }} registro(s) encontrado(s)</span>
+    </div>
+
+    <div class="empty-gate" *ngIf="filteredLogs.length === 0">
+      <span class="material-symbols-outlined">history_toggle_off</span>
+      <h3>Nenhum registro de entrada</h3>
+      <p>Não há entradas gravadas para o filtro selecionado.</p>
+    </div>
+
+    <article class="gate-card log-card" *ngFor="let log of filteredLogs">
+      <div class="gate-card-top">
+        <div class="badge-group">
+          <span class="house-pill">Casa {{ log.houseNumber }}</span>
+          <span class="type-pill" [class.perm]="log.accessType === 'permanente'">
+            {{ log.accessType === 'permanente' ? 'Permanente' : 'Avulso' }}
+          </span>
+          <span class="plate-pill" *ngIf="log.vehiclePlate">
+            🚗 {{ log.vehiclePlate }}
+          </span>
+        </div>
+
+        <span class="log-timestamp">
+          {{ log.enteredAt | date:'dd/MM/yyyy • HH:mm' }}
+        </span>
+      </div>
+
+      <div class="guest-details">
+        <h3>{{ log.visitorName }}</h3>
+        <p>
+          {{ log.category }}
+          <span *ngIf="log.visitorDoc">• Doc: {{ log.visitorDoc }}</span>
+        </p>
+        <div class="audit-footer">
+          <span>Autorizado: <strong>{{ log.authorizedByName }}</strong></span>
+          <span>•</span>
+          <span class="gatekeeper-tag">
+            ✓ Liberado por <strong>{{ log.checkedInByName }}</strong>
+          </span>
+        </div>
+      </div>
+    </article>
+  </ng-container>
+</div>

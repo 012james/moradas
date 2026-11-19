@@ -1,67 +1,86 @@
-import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
-import { AuthService } from '../../services/auth/auth.service';
-import { Router } from '@angular/router';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FooterComponent } from '../../shared/footer/footer.component';
-import { NavComponent } from '../../shared/nav/nav.component';
+import { Router, RouterModule } from '@angular/router';
+import { of } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
+import { AuthService } from '../../services/auth/auth.service';
+import { PackagesService } from '../../services/packages/packages.service';
+import { HasRoleDirective } from '../../shared/directives/has-role.directive';
+import { FirebaseApp } from '@angular/fire/app';
+import { doc, getFirestore, updateDoc } from '@angular/fire/firestore';
+import { FormsModule } from '@angular/forms';
 
-export interface UserProfile {
-  name: string;
-  unit: string;
-  email: string;
-  status: 'approved' | 'pending' | 'rejected';
-  statusLabel?: string;
-  avatarUrl?: string;
-}
 
 @Component({
   selector: 'app-user',
   standalone: true,
-  imports: [CommonModule, FooterComponent, NavComponent],
+  imports: [CommonModule, FormsModule, RouterModule, HasRoleDirective],
   templateUrl: './user.component.html',
-  styleUrl: './user.component.scss'
+  styleUrls: ['./user.component.scss']
 })
-
-export class UserComponent implements OnInit {
-  authService = inject(AuthService);
+export class PerfilComponent {
+  public authService = inject(AuthService);
+  private packagesService = inject(PackagesService);
   private router = inject(Router);
-  @Input() user: UserProfile = {
-    name: '',
-    unit: '',
-    email: '',
-    status: 'pending',
-    statusLabel: '',
-    avatarUrl: '',
-  }
-  currentTab: 'atas' | 'avisos' | 'perfil' = 'perfil';
+  // Adicione FormsModule no array imports do @Component e inclua na classe PerfilComponent:
+  private db = getFirestore(inject(FirebaseApp));
+  editingPhone = false;
+  phoneInput = '';
+  savingPhone = false;
+  phoneFeedback = '';
 
-  async ngOnInit(): Promise<void> {
-   const user = this.authService.getUserInfo();
+  user$ = this.authService.currentUser$;
 
-   if(user) {
-    this.user.name = (await user).user?.nome.stringValue || '';
-    this.user.email = (await user).user?.email.stringValue || '';
-    this.user.unit = (await user).user?.casaSolicitada.stringValue || '' ;
-    this.user.status = (await user).user?.status.stringValue || 'pending'; // This should be fetched from your backend or user data
+  startEditPhone(currentPhone?: string): void {
+  this.phoneInput = currentPhone || '';
+  this.editingPhone = true;
+}
 
-    const statusLabels: Record<UserProfile['status'], string> = {
-      approved: 'Aprovado',
-      pending: 'Pendente',
-      rejected: 'Rejeitado',
-    };
-
-    this.user.statusLabel = statusLabels[this.user.status];
-    this.user.avatarUrl = (await user).googleUser?.photoURL || '';
-   }
-  
-   console.log('aqui', user);
+async savePhone(userId: string): Promise<void> {
+  const digits = this.phoneInput.replace(/\D/g, '');
+  if (digits.length < 10) {
+    this.phoneFeedback = 'Informe o DDD + número com pelo menos 10 dígitos.';
+    return;
   }
 
-  selectTab(tab: 'atas' | 'avisos' | 'perfil'): void {
-    this.currentTab = tab;
+  this.savingPhone = true;
+  try {
+    await updateDoc(doc(this.db, 'users', userId), { phone: digits });
+    this.editingPhone = false;
+    this.phoneFeedback = 'WhatsApp atualizado com sucesso!';
+    setTimeout(() => (this.phoneFeedback = ''), 3000);
+  } finally {
+    this.savingPhone = false;
+  }
+}
+
+  houseStats$ = this.user$.pipe(
+    switchMap((user) =>
+      user?.status === 'approved' && user.houseNumber
+        ? this.packagesService.getPackagesByHouse$(user.houseNumber)
+        : of([])
+    ),
+    map((pkgs) => ({
+      pending: pkgs.filter((p) => p.status === 'aguardando').length,
+      delivered: pkgs.filter((p) => p.status === 'entregue').length
+    }))
+  );
+
+  getInitials(name?: string): string {
+    if (!name) return 'CM';
+    const parts = name.trim().split(' ').filter(Boolean);
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
-  logoutUser(): void {
+  getRoleLabel(role?: string): string {
+    if (role === 'sindico') return 'Síndico Administrador';
+    if (role === 'porteiro') return 'Equipe da Portaria';
+    return 'Morador Titular / Familiar';
+  }
+
+  async onLogout(): Promise<void> {
+    // await this.authService.logout();
     this.router.navigate(['/login']);
   }
-} 
+}

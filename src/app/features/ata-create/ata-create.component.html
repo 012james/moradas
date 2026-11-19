@@ -1,61 +1,170 @@
-<div class="create-container">
-    <app-nav></app-nav>
-  <h2>Nova Assembleia</h2>
-  
-  <div *ngIf="successMessage" class="success-alert">
-    {{ successMessage }}
-  </div>
-
-  <form [formGroup]="ataForm" (ngSubmit)="onSubmit()">
-    
-    <div class="form-group">
-      <label>Título da Assembleia *</label>
-      <input type="text" formControlName="title" placeholder="Ex: Assembleia Geral Extraordinária">
+<div class="app-page">
+  <header class="page-topbar">
+    <div>
+      <a routerLink="/admin" class="back-link">
+        <span class="material-symbols-outlined">arrow_back_ios_new</span>
+        Painel de Gestão
+      </a>
+      <h1>Nova Assembleia</h1>
     </div>
+  </header>
 
-    <div class="form-group">
-      <label>Subtítulo *</label>
-      <input type="text" formControlName="subtitle" placeholder="Ex: Pintura da Fachada e Reformas">
-    </div>
+  <label class="checkbox-row">
+    <input type="checkbox" name="sendEmailOnPublish" [(ngModel)]="sendEmailOnPublish" />
+    <span>Notificar todos os moradores aprovados por e-mail ao publicar</span>
+  </label>
 
-    <div class="form-row">
-      <div class="form-group half">
-        <label>Data *</label>
-        <input type="date" formControlName="date">
+  <form class="form-card" (ngSubmit)="onCreateAssembly()">
+    <!-- Tipo de Assembleia -->
+    <div class="field-group">
+      <label>Tipo de Convocação</label>
+      <div class="type-selector">
+        <button
+          type="button"
+          [class.active]="title === 'Assembleia Geral Extraordinária'"
+          (click)="title = 'Assembleia Geral Extraordinária'"
+        >
+          Extraordinária (AGE)
+        </button>
+        <button
+          type="button"
+          [class.active]="title === 'Assembleia Geral Ordinária'"
+          (click)="title = 'Assembleia Geral Ordinária'"
+        >
+          Ordinária (AGO)
+        </button>
       </div>
-      <div class="form-group half">
-        <label>Horário *</label>
-        <input type="time" formControlName="time">
+    </div>
+
+    <!-- Tema Principal -->
+    <div class="field-group">
+      <label>Título / Tema da Pauta</label>
+      <input
+        type="text"
+        name="subtitle"
+        [(ngModel)]="subtitle"
+        placeholder="Ex: Pintura da Fachada e Reformas Estruturais"
+        required
+      />
+    </div>
+
+    <!-- Descrição Detalhada -->
+    <div class="field-group">
+      <label>Descrição e Deliberações</label>
+      <textarea
+        rows="4"
+        name="description"
+        [(ngModel)]="description"
+        placeholder="Descreva os orçamentos, empresas concorrentes e regras de aplicação..."
+        required
+      ></textarea>
+    </div>
+
+    <!-- Prazo de Encerramento e Quórum Lado a Lado -->
+    <div class="grid-2-cols">
+      <div class="field-group">
+        <label>Data de Encerramento</label>
+        <input
+          type="date"
+          name="closingDate"
+          [(ngModel)]="closingDate"
+          required
+        />
+      </div>
+
+      <div class="field-group">
+        <label>Horário Limite</label>
+        <input
+          type="time"
+          name="closingTime"
+          [(ngModel)]="closingTime"
+          required
+        />
       </div>
     </div>
 
-    <div class="form-group">
-      <label>Local *</label>
-      <input type="text" formControlName="location" placeholder="Ex: Salão de Festas (Bloco A)">
+    <!-- Quórum Mínimo -->
+    <div class="field-group">
+      <div class="label-row">
+        <label>Quórum Mínimo para Validação</label>
+        <span class="quorum-hint">{{ minimumQuorum }} de 600 casas</span>
+      </div>
+      <input
+        type="number"
+        min="1"
+        max="600"
+        name="minimumQuorum"
+        [(ngModel)]="minimumQuorum"
+      />
     </div>
 
-    <div class="form-group">
-      <label>Descrição *</label>
-      <textarea formControlName="description" rows="4" placeholder="Detalhes e pautas da reunião..."></textarea>
+    <!-- Formato / Local -->
+    <div class="field-group">
+      <label>Modalidade / Local</label>
+      <div class="location-pills">
+        <button
+          type="button"
+          [class.selected]="locationPreset === 'Virtual (App)'"
+          (click)="selectLocationPreset('Virtual (App)')"
+        >
+          <span class="material-symbols-outlined">smartphone</span>
+          Virtual (App)
+        </button>
+
+        <button
+          type="button"
+          [class.selected]="locationPreset === 'Salão de Festas (Híbrida)'"
+          (click)="selectLocationPreset('Salão de Festas (Híbrida)')"
+        >
+          <span class="material-symbols-outlined">groups</span>
+          Híbrida (Salão)
+        </button>
+
+        <button
+          type="button"
+          [class.selected]="locationPreset === 'Outro'"
+          (click)="selectLocationPreset('Outro')"
+        >
+          Outro Local
+        </button>
+      </div>
+
+      <input
+        *ngIf="locationPreset === 'Outro'"
+        type="text"
+        class="mt-input"
+        name="customLocation"
+        [(ngModel)]="customLocation"
+        placeholder="Informe o bloco ou espaço..."
+      />
     </div>
 
-    <div class="form-group">
-      <label>URL do PDF Anexo (Opcional)</label>
-      <input type="url" formControlName="pdfUrl" placeholder="https://...">
+    <!-- Anexo de Proposta Técnica (PDF) -->
+    <div class="pdf-upload-box">
+      <div class="pdf-box-head">
+        <span class="material-symbols-outlined">picture_as_pdf</span>
+        <div>
+          <strong>Proposta Técnica ou Orçamento (PDF)</strong>
+          <span>Cole o link do Google Drive ou arquivo público para consulta</span>
+        </div>
+      </div>
+
+      <input
+        type="url"
+        name="pdfUrl"
+        [(ngModel)]="pdfUrl"
+        placeholder="https://drive.google.com/..."
+      />
     </div>
 
-    <button type="submit" [disabled]="ataForm.invalid || isSubmitting" class="submit-btn">
-      {{ isSubmitting ? 'Salvando...' : 'Cadastrar Assembleia' }}
+    <div class="error-banner" *ngIf="errorMessage">
+      <span class="material-symbols-outlined">error</span>
+      {{ errorMessage }}
+    </div>
+
+    <button type="submit" class="btn-publish" [disabled]="isSubmitting">
+      <span class="material-symbols-outlined">rocket_launch</span>
+      {{ isSubmitting ? 'Publicando Edital...' : 'Publicar Assembleia Agora' }}
     </button>
   </form>
-  
-  <!-- Botão para Aprovar Moradores -->
-  <a (click)="navigateToAprovacoes()" class="admin-card pending-card">
-    <span class="material-symbols-outlined">how_to_reg</span>
-    <div class="card-text">
-      <h3>Aprovar Moradores</h3>
-      <p>Liberar acesso e vincular casas</p>
-    </div>
-  </a>
-  <app-footer [currentTab]="'admin'" *ngIf="authService.currentUser$ | async"></app-footer>
 </div>

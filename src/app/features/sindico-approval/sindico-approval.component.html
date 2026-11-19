@@ -1,28 +1,219 @@
-<div class="approval-container">
-  <h3>Aprovações Pendentes</h3>
+<div class="app-page">
+  <!-- Cabeçalho -->
+  <header class="approval-header">
+    <div>
+      <a routerLink="/admin" class="back-link">
+        <span class="material-symbols-outlined">arrow_back_ios_new</span>
+        Central de Gestão
+      </a>
+      <h1>Moradores & Cargos</h1>
+    </div>
 
-  <div *ngIf="pendingUsers.length === 0" class="empty-state">
-    Nenhum morador aguardando aprovação no momento.
+    <span class="pending-pill" *ngIf="pendingCount > 0">
+      {{ pendingCount }} pendente(s)
+    </span>
+  </header>
+
+  <!-- Toast de Feedback -->
+  <div class="toast-banner" *ngIf="feedbackToast">
+    <span class="material-symbols-outlined">check_circle</span>
+    {{ feedbackToast }}
   </div>
 
-  <div class="user-card" *ngFor="let user of pendingUsers">
-    <div class="user-info">
-      <div>
-        <!-- Usando name e street (ajuste se o nome da variável da casa for diferente) -->
-        <strong>{{ user.nome }}</strong>
-        <p>{{ user.email }}</p>
-        <span class="badge-house">{{ user.casaSolicitada }}</span>
+  <!-- Abas: Pendentes vs Aprovados -->
+  <div class="segmented-tabs">
+    <button
+      type="button"
+      [class.active]="activeTab === 'pending'"
+      (click)="activeTab = 'pending'"
+    >
+      Pendentes ({{ pendingCount }})
+    </button>
+
+    <button
+      type="button"
+      [class.active]="activeTab === 'approved'"
+      (click)="activeTab = 'approved'"
+    >
+      Aprovados ({{ approvedCount }})
+    </button>
+  </div>
+
+  <!-- Busca Rápida -->
+  <div class="search-box">
+    <span class="material-symbols-outlined">search</span>
+    <input
+      type="text"
+      [(ngModel)]="searchTerm"
+      placeholder="Buscar por casa (1-600), nome, rua ou e-mail..."
+    />
+    <button
+      *ngIf="searchTerm"
+      type="button"
+      class="btn-clear"
+      (click)="searchTerm = ''"
+    >
+      <span class="material-symbols-outlined">close</span>
+    </button>
+  </div>
+
+  <!-- Estado Vazio -->
+  <div class="empty-card" *ngIf="filteredUsers.length === 0">
+    <span class="material-symbols-outlined">
+      {{ activeTab === 'pending' ? 'how_to_reg' : 'group_off' }}
+    </span>
+    <h3>
+      {{
+        activeTab === 'pending'
+          ? 'Nenhum cadastro aguardando aprovação'
+          : 'Nenhum morador encontrado'
+      }}
+    </h3>
+    <p>
+      {{
+        activeTab === 'pending'
+          ? 'Novas solicitações de moradores aparecerão aqui em tempo real.'
+          : 'Tente buscar por outro número de casa ou nome.'
+      }}
+    </p>
+  </div>
+
+  <!-- Lista de Cards de Moradores -->
+  <article
+    class="user-card"
+    *ngFor="let user of filteredUsers"
+    [class.processing]="processingId === user.id"
+  >
+    <div class="user-top">
+      <div class="avatar-circle">
+        {{ getInitials(user.name) }}
+      </div>
+
+      <div class="user-info">
+        <div class="name-row">
+          <h3>{{ user.name }}</h3>
+          <span class="house-badge">Casa {{ user.houseNumber }}</span>
+        </div>
+
+        <p class="address-line">
+          <span class="material-symbols-outlined">location_on</span>
+          {{ user.street || 'Endereço não informado' }}
+        </p>
+
+        <div class="contact-meta">
+          <span>{{ user.email }}</span>
+          <span *ngIf="user.phone">• 📱 {{ user.phone }}</span>
+        </div>
       </div>
     </div>
 
-    <div class="actions">
-      <!-- Usando user.id no click -->
-      <button class="btn-approve" (click)="updateUserStatus(user.uid, 'approved')">
-        Aprovar
-      </button>
-      <button class="btn-reject" (click)="updateUserStatus(user.uid, 'rejected')">
-        Recusar
-      </button>
+    <!-- =====================================================
+         CONTROLES PARA CADASTROS PENDENTES
+         ===================================================== -->
+    <div class="card-controls" *ngIf="activeTab === 'pending'">
+      <div class="role-selector-group">
+        <label>Definir perfil de acesso ao aprovar:</label>
+        <div class="role-pills">
+          <button
+            type="button"
+            [class.selected]="(selectedRoles[user.id] || 'morador') === 'morador'"
+            (click)="selectRoleForUser(user.id, 'morador')"
+          >
+            Morador
+          </button>
+
+          <button
+            type="button"
+            [class.selected]="selectedRoles[user.id] === 'porteiro'"
+            (click)="selectRoleForUser(user.id, 'porteiro')"
+          >
+            Porteiro
+          </button>
+
+          <button
+            type="button"
+            [class.selected]="selectedRoles[user.id] === 'secretaria'"
+            (click)="selectRoleForUser(user.id, 'secretaria')"
+          >
+            Secretária
+          </button>
+
+          <button
+            type="button"
+            [class.selected]="selectedRoles[user.id] === 'sindico'"
+            (click)="selectRoleForUser(user.id, 'sindico')"
+          >
+            Síndico
+          </button>
+        </div>
+      </div>
+
+      <div class="decision-buttons">
+        <button
+          type="button"
+          class="btn-reject"
+          [disabled]="processingId === user.id"
+          (click)="approveOrRejectUser(user, 'rejected')"
+        >
+          <span class="material-symbols-outlined">delete_forever</span>
+          Recusar e Excluir
+        </button>
+
+        <button
+          type="button"
+          class="btn-approve"
+          [disabled]="processingId === user.id"
+          (click)="approveOrRejectUser(user, 'approved')"
+        >
+          <span class="material-symbols-outlined">check</span>
+          {{ processingId === user.id ? 'Salvando...' : 'Aprovar Acesso' }}
+        </button>
+      </div>
     </div>
-  </div>
+
+    <!-- =====================================================
+         CONTROLES PARA MORADORES JÁ APROVADOS (TROCA DE CARGO)
+         ===================================================== -->
+    <div class="card-controls approved-footer" *ngIf="activeTab === 'approved'">
+      <span class="role-label">Cargo atual:</span>
+
+      <div class="role-pills compact">
+        <button
+          type="button"
+          [class.selected]="user.role === 'morador'"
+          [disabled]="processingId === user.id"
+          (click)="updateActiveUserRole(user, 'morador')"
+        >
+          Morador
+        </button>
+
+        <button
+          type="button"
+          [class.selected]="user.role === 'porteiro'"
+          [disabled]="processingId === user.id"
+          (click)="updateActiveUserRole(user, 'porteiro')"
+        >
+          Porteiro
+        </button>
+
+        <button
+          type="button"
+          [class.selected]="user.role === 'secretaria'"
+          [disabled]="processingId === user.id"
+          (click)="updateActiveUserRole(user, 'secretaria')"
+        >
+          Secretária
+        </button>
+
+        <button
+          type="button"
+          [class.selected]="user.role === 'sindico'"
+          [disabled]="processingId === user.id"
+          (click)="updateActiveUserRole(user, 'sindico')"
+        >
+          Síndico
+        </button>
+      </div>
+    </div>
+  </article>
 </div>

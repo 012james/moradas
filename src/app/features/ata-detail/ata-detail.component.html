@@ -1,192 +1,283 @@
-<div class="detail-page">
-  <app-nav></app-nav>
-  <!-- Conteúdo Principal -->
-  <main class="main-content">
-    
-    <!-- Cabeçalho da Assembleia -->
-    <section class="assembly-header-section">
-      <div class="title-and-badge">
-        <h1 class="main-title">{{ ata?.title }}</h1>
-        <span class="status-badge" [ngClass]="ata?.status || 'open'">
-          <span class="material-symbols-outlined icon">how_to_vote</span>
-          {{ ata?.status === 'open' ? 'Votação em Aberto' : 'Votação Encerrada' }}
-        </span>
-      </div>
+<div class="detail-page" *ngIf="ata">
+  <!-- Barra Superior -->
+  <div class="detail-topbar">
+    <button type="button" class="btn-back" (click)="goBack()">
+      <span class="material-symbols-outlined">arrow_back_ios_new</span>
+      Voltar
+    </button>
 
-      <h2 class="subtitle">{{ ata?.subtitle }}</h2>
+    <span
+      class="status-chip"
+      [class.closed]="ata.status === 'closed' || ata.status === 'encerrada'"
+    >
+      {{
+        ata.status === 'closed' || ata.status === 'encerrada'
+          ? 'Votação Encerrada'
+          : 'Votação em Aberto'
+      }}
+    </span>
+  </div>
 
-      <p class="description">
-        {{ ata?.description }}
-      </p>
+  <!-- Cabeçalho e Descrição da Pauta -->
+  <section class="pauta-card">
+    <span class="pauta-eyebrow">
+      {{ ata.subtitle || 'Assembleia Geral Extraordinária' }}
+    </span>
+    <h1 class="pauta-title">{{ ata.title }}</h1>
+    <p class="pauta-description">{{ ata.description }}</p>
 
-      <button type="button" class="btn-download-pdf" (click)="downloadPdf()">
+    <!-- Anexo PDF (quando disponível) -->
+    <a
+      *ngIf="ata.pdfUrl"
+      class="pdf-attachment"
+      [href]="ata.pdfUrl"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <div class="pdf-icon">
         <span class="material-symbols-outlined">description</span>
-        Ver Proposta Técnica e Orçamentos (PDF)
-      </button>
-    </section>
+      </div>
+      <div class="pdf-text">
+        <strong>Proposta Técnica e Orçamentos</strong>
+        <span>Documento oficial em PDF</span>
+      </div>
+      <span class="material-symbols-outlined pdf-download">download</span>
+    </a>
+  </section>
 
-    <!-- Cards de Informações (Data e Local) -->
-    <section class="info-cards-section">
-      <!-- Card Data e Hora -->
-      <div class="info-card">
-        <div class="icon-circle primary">
-          <span class="material-symbols-outlined">event</span>
-        </div>
-        <div class="info-content">
-          <span class="info-label">Data e Hora</span>
-          <strong class="info-value">{{ ata?.dateFormatted }} às {{ ata?.time }}</strong>
-        </div>
+  <!-- Data Limite e Local -->
+  <section class="meta-grid">
+    <div class="meta-box">
+      <div class="meta-icon">
+        <span class="material-symbols-outlined">calendar_today</span>
+      </div>
+      <div class="meta-info">
+        <span>Data Limite</span>
+        <strong>
+          {{
+            (ata.expiresAt?.toDate ? ata.expiresAt.toDate() : (ata.expiresAt || ata.date))
+              | date: 'dd MMM, HH:mm'
+          }}
+        </strong>
+      </div>
+    </div>
+
+    <div class="meta-box">
+      <div class="meta-icon">
+        <span class="material-symbols-outlined">location_on</span>
+      </div>
+      <div class="meta-info">
+        <span>Local</span>
+        <strong>{{ ata.location || 'Virtual (App)' }}</strong>
+      </div>
+    </div>
+  </section>
+
+  <!-- Placar em Tempo Real -->
+  <section class="scoreboard-card" *ngIf="totalVotes > 0">
+    <div class="scoreboard-head">
+      <span>Apuração Parcial</span>
+      <strong>
+        {{ totalVotes }} {{ totalVotes === 1 ? 'voto computado' : 'votos computados' }}
+      </strong>
+    </div>
+
+    <div class="progress-track">
+      <div
+        class="seg favor"
+        [style.width.%]="(favorCount / totalVotes) * 100"
+      ></div>
+      <div
+        class="seg contra"
+        [style.width.%]="(contraCount / totalVotes) * 100"
+      ></div>
+      <div
+        class="seg abster"
+        [style.width.%]="(absterCount / totalVotes) * 100"
+      ></div>
+    </div>
+
+    <div class="legend-row">
+      <span class="leg-favor">
+        ● A favor: {{ ((favorCount / totalVotes) * 100) | number: '1.0-0' }}% ({{ favorCount }})
+      </span>
+      <span class="leg-contra">
+        ● Contra: {{ ((contraCount / totalVotes) * 100) | number: '1.0-0' }}% ({{ contraCount }})
+      </span>
+      <span class="leg-abster">
+        ● Abstenção: {{ ((absterCount / totalVotes) * 100) | number: '1.0-0' }}% ({{ absterCount }})
+      </span>
+    </div>
+  </section>
+
+  <!-- Urna Digital (Votação Aberta) -->
+  <section
+    class="voting-card"
+    *ngIf="ata.status !== 'closed' && ata.status !== 'encerrada'"
+  >
+    <!-- ESTADO 1: Voto já escolhido (exibe apenas a opção votada + botão Mudar voto) -->
+    <ng-container *ngIf="currentVote && !isChangingVote">
+      <div class="voting-head">
+        <h2>Voto da sua unidade</h2>
+        <span class="voted-badge">Registrado</span>
       </div>
 
-      <!-- Card Local -->
-      <div class="info-card">
-        <div class="icon-circle tertiary">
-          <span class="material-symbols-outlined">location_on</span>
-        </div>
-        <div class="info-content">
-          <span class="info-label">Local</span>
-          <strong class="info-value">{{ ata?.location }}</strong>
-        </div>
-      </div>
-    </section>
-
-    <!-- Seção de Votação Interativa -->
-    <section *ngIf="(authService.canVote$ | async) && ata?.status === 'open' && !votedOption" class="voting-section" [class.submitting]="isSubmitting">
-      <h3 class="voting-heading">Como você vota nesta pauta?</h3>
-
-      <div class="voting-buttons">
-        <!-- Voto A Favor -->
-        <button 
-          type="button" 
-          class="vote-option-btn favorable" 
-          (click)="castVote('A Favor')">
-          <div class="vote-content-left">
-            <div class="symbol-circle favor">
+      <div class="recorded-vote-card" [ngClass]="currentVote">
+        <ng-container [ngSwitch]="currentVote">
+          <ng-container *ngSwitchCase="'favor'">
+            <div class="rec-icon">
               <span class="material-symbols-outlined">thumb_up</span>
             </div>
-            <span class="vote-text">A Favor</span>
-          </div>
-          <span class="material-symbols-outlined chevron">chevron_right</span>
-        </button>
+            <div class="rec-text">
+              <span class="rec-tag">Opção escolhida</span>
+              <strong>A Favor</strong>
+              <p>Você concordou com a proposta apresentada</p>
+            </div>
+          </ng-container>
 
-        <!-- Voto Contra -->
-        <button 
-          type="button" 
-          class="vote-option-btn against" 
-          (click)="castVote('Contra')">
-          <div class="vote-content-left">
-            <div class="symbol-circle against">
+          <ng-container *ngSwitchCase="'contra'">
+            <div class="rec-icon">
               <span class="material-symbols-outlined">thumb_down</span>
             </div>
-            <span class="vote-text">Contra</span>
-          </div>
-          <span class="material-symbols-outlined chevron">chevron_right</span>
-        </button>
-
-        <!-- Voto Abster -->
-        <button 
-          type="button" 
-          class="vote-option-btn abstain" 
-          (click)="castVote('Abster')">
-          <div class="vote-content-left">
-            <div class="symbol-circle abstain">
-              <span class="material-symbols-outlined">remove</span>
+            <div class="rec-text">
+              <span class="rec-tag">Opção escolhida</span>
+              <strong>Contra</strong>
+              <p>Você reprovou o orçamento ou execução</p>
             </div>
-            <span class="vote-text">Abster</span>
+          </ng-container>
+
+          <ng-container *ngSwitchCase="'abster'">
+            <div class="rec-icon">
+              <span class="material-symbols-outlined">do_not_disturb_on</span>
+            </div>
+            <div class="rec-text">
+              <span class="rec-tag">Opção escolhida</span>
+              <strong>Abster-se</strong>
+              <p>Você registrou presença apenas para quórum</p>
+            </div>
+          </ng-container>
+        </ng-container>
+
+        <span class="material-symbols-outlined rec-check">check_circle</span>
+      </div>
+
+      <button
+        type="button"
+        class="btn-change-vote"
+        [disabled]="isSubmitting"
+        (click)="startChangeVote()"
+      >
+        <span class="material-symbols-outlined">edit</span>
+        Mudar meu voto
+      </button>
+    </ng-container>
+
+    <!-- ESTADO 2: Ainda não votou OU clicou em "Mudar meu voto" -->
+    <ng-container *ngIf="!currentVote || isChangingVote">
+      <h2>
+        {{
+          isChangingVote
+            ? 'Escolha a nova opção de voto:'
+            : 'Como sua unidade vota nesta pauta?'
+        }}
+      </h2>
+
+      <div class="vote-options">
+        <button
+          type="button"
+          class="vote-option favor"
+          [class.selected]="currentVote === 'favor'"
+          [disabled]="isSubmitting"
+          (click)="vote('favor')"
+        >
+          <div class="opt-icon">
+            <span class="material-symbols-outlined">thumb_up</span>
           </div>
-          <span class="material-symbols-outlined chevron">chevron_right</span>
+          <div class="opt-text">
+            <strong>A Favor</strong>
+            <span>Concordo com a proposta apresentada</span>
+          </div>
+          <span class="material-symbols-outlined opt-arrow">
+            {{ currentVote === 'favor' ? 'check_circle' : 'chevron_right' }}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          class="vote-option contra"
+          [class.selected]="currentVote === 'contra'"
+          [disabled]="isSubmitting"
+          (click)="vote('contra')"
+        >
+          <div class="opt-icon">
+            <span class="material-symbols-outlined">thumb_down</span>
+          </div>
+          <div class="opt-text">
+            <strong>Contra</strong>
+            <span>Reprovo o orçamento ou execução</span>
+          </div>
+          <span class="material-symbols-outlined opt-arrow">
+            {{ currentVote === 'contra' ? 'check_circle' : 'chevron_right' }}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          class="vote-option abster"
+          [class.selected]="currentVote === 'abster'"
+          [disabled]="isSubmitting"
+          (click)="vote('abster')"
+        >
+          <div class="opt-icon">
+            <span class="material-symbols-outlined">do_not_disturb_on</span>
+          </div>
+          <div class="opt-text">
+            <strong>Abster-se</strong>
+            <span>Registrar presença apenas para quórum</span>
+          </div>
+          <span class="material-symbols-outlined opt-arrow">
+            {{ currentVote === 'abster' ? 'check_circle' : 'chevron_right' }}
+          </span>
         </button>
       </div>
-    </section>
 
-    <!-- Mensagem para moradores não aprovados -->
-    <section *ngIf="(authService.canVote$ | async) === false">
-      <div class="pending-notice">
-        <span class="material-symbols-outlined">hourglass_top</span>
-        <p>Seu perfil precisa ser aprovado pelo síndico para poder votar.</p>
-      </div>
-    </section>
+      <button
+        *ngIf="isChangingVote"
+        type="button"
+        class="btn-cancel-change"
+        [disabled]="isSubmitting"
+        (click)="cancelChangeVote()"
+      >
+        Cancelar alteração
+      </button>
+    </ng-container>
 
-    <!-- Estado de Sucesso / Voto Computado -->
-    <section *ngIf="votedOption" class="success-state-section">
-      <div class="success-icon-badge">
-        <span class="material-symbols-outlined">check_circle</span>
-      </div>
-      <h3 class="success-title">Voto Registrado</h3>
-      <p class="success-desc">
-        Seu voto <strong class="voted-tag">"{{ votedOption }}"</strong> foi computado com sucesso. Obrigado por participar.
-      </p>
-      
-      <div class="success-actions">
-        <button type="button" class="btn-return" (click)="goBack()">
-          Voltar para Assembleias
-        </button>
-        <button type="button" class="btn-change-vote" (click)="resetVote()">
-          Alterar Voto
-        </button>
-      </div>
-    </section>
-
-<section *ngIf="ata?.status !== 'open'" class="closed-voting-section" [ngClass]="ata?.outcome || 'default'">
-
-  <div class="closed-icon-badge">
-    <!-- Ícone dinâmico -->
-    <span class="material-symbols-outlined" *ngIf="ata?.outcome === 'approved'">check_circle</span>
-    <span class="material-symbols-outlined" *ngIf="ata?.outcome === 'rejected'">cancel</span>
-    <span class="material-symbols-outlined" *ngIf="ata?.outcome === 'insufficient_votes'">warning</span>
-    <span class="material-symbols-outlined" *ngIf="!ata?.outcome">lock</span>
-  </div>
-
-  <h3 class="closed-title">
-    <!-- Título dinâmico -->
-    <ng-container *ngIf="ata?.outcome === 'approved'">Pauta Aprovada</ng-container>
-    <ng-container *ngIf="ata?.outcome === 'rejected'">Pauta Reprovada</ng-container>
-    <ng-container *ngIf="ata?.outcome === 'insufficient_votes'">Votos Insuficientes</ng-container>
-    <ng-container *ngIf="!ata?.outcome">Votação Encerrada</ng-container>
-  </h3>
-
-  <p class="closed-desc">
-    <!-- Descrição dinâmica -->
-    <ng-container *ngIf="ata?.outcome === 'approved'">A maioria dos moradores votou a favor. As medidas serão aplicadas
-      conforme a pauta.</ng-container>
-    <ng-container *ngIf="ata?.outcome === 'rejected'">A maioria dos moradores votou contra. A pauta foi arquivada e não
-      seguirá em frente.</ng-container>
-    <ng-container *ngIf="ata?.outcome === 'insufficient_votes'">Não houve adesão mínima de moradores para validar o
-      resultado desta assembleia.</ng-container>
-    <ng-container *ngIf="!ata?.outcome">A votação para esta assembleia foi encerrada. O resultado final está sendo
-      contabilizado.</ng-container>
-  </p>
-</section>
-
-<!-- Placar em tempo real -->
-<div class="vote-scoreboard" *ngIf="voteResults">
-  <h4 class="scoreboard-title">Apuração dos Votos</h4>
-  
-  <div class="score-cards">
-    <div class="score-card approve">
-      <span class="material-symbols-outlined">thumb_up</span>
-      <span class="score-value">{{ voteResults.approved }}</span>
-      <span class="score-label">Aprovações</span>
+    <div class="audit-footer" *ngIf="authService.currentUser$ | async as user">
+      <span class="material-symbols-outlined">verified_user</span>
+      <span>Voto único auditado e vinculado à Casa {{ user.houseNumber || '--' }}</span>
     </div>
-    
-    <div class="score-card reject">
-      <span class="material-symbols-outlined">thumb_down</span>
-      <span class="score-value">{{ voteResults.rejected }}</span>
-      <span class="score-label">Reprovações</span>
-    </div>
-    
-    <div class="score-card abstain">
-      <span class="material-symbols-outlined">front_hand</span>
-      <span class="score-value">{{ voteResults.abstain }}</span>
-      <span class="score-label">Abstenções</span>
-    </div>
-  </div>
+  </section>
 
-  <div class="score-total">
-    Total de votos computados: <strong>{{ voteResults.total }}</strong>
-  </div>
-</div>
-
-  </main>
-  <app-footer [currentTab]="'atas'" *ngIf="authService.currentUser$ | async"></app-footer>
+  <!-- Resultado Final (Votação Encerrada) -->
+  <section
+    class="outcome-card"
+    *ngIf="ata.status === 'closed' || ata.status === 'encerrada'"
+    [class.rejected]="ata.outcome === 'reprovada' || ata.outcome === 'rejected'"
+  >
+    <span class="material-symbols-outlined">
+      {{
+        ata.outcome === 'reprovada' || ata.outcome === 'rejected'
+          ? 'cancel'
+          : 'task_alt'
+      }}
+    </span>
+    <h3>
+      {{
+        ata.outcome === 'reprovada' || ata.outcome === 'rejected'
+          ? 'Pauta Reprovada'
+          : 'Pauta Aprovada'
+      }}
+    </h3>
+    <p>Assembleia encerrada. O resultado foi registrado oficialmente em ata.</p>
+  </section>
 </div>

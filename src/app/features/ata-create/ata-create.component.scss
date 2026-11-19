@@ -1,118 +1,335 @@
-.create-container {
-  max-width: 600px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+SCSS
+.page-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 1.15rem;
 
-  h2 {
-    margin-bottom: 1.5rem;
-    color: #333;
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--brand-primary);
+    text-decoration: none;
+    margin-bottom: 0.2rem;
+    .material-symbols-outlined { font-size: 0.9rem; }
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 1.35rem;
+    color: var(--text-main);
+  }
+
+}
+
+.form-card {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.field-group {
+  margin-bottom: 1rem;
+
+  .label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 0.38rem;
+  }
+
+  .quorum-hint {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--brand-primary);
+  }
+
+  input,
+  textarea {
+    width: 100%;
+    padding: 0.72rem 0.85rem;
+    border: 1.5px solid var(--border-subtle);
+    border-radius: 10px;
+    font-size: 0.92rem;
+    font-family: inherit;
+    background: #f8fafc;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease, background 0.15s ease;
+
+    &:focus {
+      outline: none;
+      border-color: var(--brand-primary);
+      background: #ffffff;
+    }
+  }
+
+  .mt-input {
+    margin-top: 0.55rem;
   }
 }
 
-.form-group {
-  margin-bottom: 1rem;
-  display: flex;
-  flex-direction: column;
+.type-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #e2e8f0;
+  padding: 4px;
+  border-radius: 10px;
 
-  label {
-    margin-bottom: 0.5rem;
-    font-weight: 600;
-    font-size: 0.9rem;
-    color: #555;
-  }
+  button {
+    border: none;
+    background: transparent;
+    padding: 0.55rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    cursor: pointer;
 
-  input, textarea {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 1rem;
-    font-family: inherit;
-    
-    &:focus {
-      outline: none;
-      border-color: #0056b3;
+    &.active {
+      background: var(--surface);
+      color: var(--brand-primary);
+      box-shadow: 0 2px 5px rgba(15, 23, 42, 0.08);
     }
   }
 }
 
-.form-row {
-  display: flex;
-  gap: 1rem;
+.grid-2-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
 
-  .half {
-    flex: 1;
+.location-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.48rem 0.8rem;
+    border-radius: 999px;
+    border: 1px solid var(--border-subtle);
+    background: #f8fafc;
+    color: #475569;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    .material-symbols-outlined { font-size: 1rem; }
+
+    &.selected {
+      background: var(--brand-primary);
+      border-color: var(--brand-primary);
+      color: #ffffff;
+    }
   }
 }
 
-.submit-btn {
-  width: 100%;
-  padding: 12px;
-  background-color: #0056b3;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 1rem;
-  transition: background-color 0.2s;
+.pdf-upload-box {
+  background: #f8fbff;
+  border: 1.5px dashed #93c5fd;
+  border-radius: 12px;
+  padding: 0.95rem;
+  margin-bottom: 1.15rem;
 
-  &:hover:not(:disabled) {
-    background-color: #004494;
+  .pdf-box-head {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 0.65rem;
+    color: var(--brand-primary);
+
+    strong {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-main);
+    }
+
+    span {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
   }
 
+  input {
+    width: 100%;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    box-sizing: border-box;
+    background: #ffffff;
+  }
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--danger-bg);
+  color: var(--danger-text);
+  padding: 0.7rem;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.btn-publish {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--brand-gradient);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 0.95rem;
+  font-size: 0.96rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+
   &:disabled {
-    background-color: #ccc;
+    opacity: 0.6;
     cursor: not-allowed;
   }
 }
 
-.admin-card {
-  display: flex;
+:host {
+  display: block;
+  min-height: 100vh;
+  background: var(--bg-app, #f8fafc);
+  padding: 1rem 1rem 6.5rem 1rem;
+  box-sizing: border-box;
+}
+
+/* 1. Link "< Painel de Gestão" */
+a[routerLink='/admin'],
+.back-link,
+.btn-back {
+  display: inline-flex;
   align-items: center;
-  margin-top: 2rem;
-  padding: 1.25rem;
-  background-color: #ffffff;
-  border: 1px solid #e0e0e0;
+  gap: 0.3rem;
+  padding: 0.4rem 0.65rem;
+  margin-left: -0.65rem;
+  margin-bottom: 0.35rem;
   border-radius: 10px;
   text-decoration: none;
-  color: inherit;
-  cursor: pointer; /* Garante o formato de "mãozinha" ao passar o mouse no botão */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-  width: 100%;
-  box-sizing: border-box;
-
-  /* Efeito padrão de Hover (Azul) */
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 86, 179, 0.15);
-    border-color: #0056b3;
-  }
+  color: var(--brand-primary, #0056b3);
+  font-size: 0.88rem;
+  font-weight: 700;
+  transition: background 0.15s ease;
 
   .material-symbols-outlined {
-    font-size: 2.5rem;
-    color: #0056b3;
-    margin-right: 1.25rem;
+    font-size: 1rem;
   }
 
-  .card-text {
-    text-align: left;
-    
-    h3 {
-      margin: 0 0 0.25rem 0;
-      font-size: 1.1rem;
-      color: #333;
-      font-weight: 600;
-    }
+  &:hover {
+    background: #eff6ff;
+  }
+}
 
-    p {
-      margin: 0;
-      font-size: 0.85rem;
-      color: #666;
+/* 2. Título e Selo "Edital Digital" */
+h1 {
+  margin: 0 0 0.45rem 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--text-main, #0f172a);
+}
+
+.edital-badge,
+.header-badge,
+.subtitle-badge,
+h1 + span,
+h1 + div:not(form):not(.form-card):not(.card) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  padding: 0.32rem 0.78rem;
+  margin-bottom: 0.85rem;
+  border-radius: 999px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: var(--brand-primary, #0056b3);
+  font-size: 0.76rem;
+  font-weight: 800;
+
+  .material-symbols-outlined {
+    font-size: 1rem;
+  }
+}
+
+/* 3. Card do Checkbox "Notificar todos os moradores..." */
+.notify-box,
+.notify-check,
+.email-notify,
+label:has(> input[type='checkbox']),
+div:not(form):not(.form-card):has(> input[type='checkbox']) {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.8rem 0.95rem;
+  margin: 0 0 1rem 0;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.35;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    border-color: var(--brand-primary, #0056b3);
+    background: #f8fafc;
+  }
+
+  input[type='checkbox'] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    flex-shrink: 0;
+    accent-color: var(--brand-primary, #0056b3);
+    cursor: pointer;
+  }
+}
+
+/* 4. Destaque da opção ativa em "Tipo de Convocação" (AGE / AGO) */
+form div:has(> button:first-child:nth-last-child(2)),
+.form-card div:has(> button:first-child:nth-last-child(2)),
+.type-toggle,
+.segmented-control {
+  button {
+    border: none;
+    border-radius: 9px;
+    transition: all 0.15s ease;
+
+    &.active,
+    &.selected,
+    &[aria-pressed='true'] {
+      background: #ffffff !important;
+      color: var(--brand-primary, #0056b3) !important;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.1);
     }
   }
 }

@@ -1,0 +1,141 @@
+<div class="app-page">
+  <header class="page-head" *ngIf="authService.currentUser$ | async as user">
+    <div>
+      <span class="eyebrow">Financeiro da Unidade</span>
+      <h1>Meus Boletos • Casa {{ user.houseNumber }}</h1>
+    </div>
+  </header>
+
+  <!-- Atalho Administrativo para Gerar Boletos (Exclusivo do Síndico) -->
+  <a *appHasRole="['sindico', 'secretaria']" routerLink="/admin/boletos" class="btn-generate-invoice">
+    <span class="material-symbols-outlined">request_quote</span>
+    <div>
+      <strong>Gerar / Lançar Boleto</strong>
+      <span>Emitir mensalidade ou cobrança avulsa para unidades</span>
+    </div>
+    <span class="material-symbols-outlined">chevron_right</span>
+  </a>
+
+  <div class="copy-toast" *ngIf="copiedFeedback">
+    <span class="material-symbols-outlined">check_circle</span>
+    {{ copiedFeedback }}
+  </div>
+
+  <div *ngIf="(authService.canVote$ | async) === false" class="empty-state">
+    <span class="material-symbols-outlined">lock_clock</span>
+    <p>Aguarde a aprovação da sua unidade pelo síndico para acessar os boletos da casa.</p>
+  </div>
+
+  <ng-container *ngIf="authService.canVote$ | async">
+    <!-- Faturas em Aberto -->
+    <section class="invoice-section">
+      <h2>Mensalidades em Aberto</h2>
+
+      <ng-container *ngIf="openInvoices$ | async as openList">
+        <div *ngIf="openList.length === 0" class="empty-state ok">
+          <span class="material-symbols-outlined">verified</span>
+          <h3>Tudo em dia!</h3>
+          <p>Não há boletos pendentes para a sua casa no momento.</p>
+        </div>
+
+        <article
+          class="invoice-hero-card"
+          *ngFor="let inv of openList"
+          [class.overdue]="isOverdue(inv.dueDate)"
+        >
+          <div class="card-top">
+            <span class="status-pill" [class.overdue]="isOverdue(inv.dueDate)">
+              {{ isOverdue(inv.dueDate) ? '⚠️ Vencido' : 'Em Aberto' }} • Vence
+              {{ inv.dueDate | date:'dd/MM/yyyy' }}
+            </span>
+            <span class="material-symbols-outlined">receipt_long</span>
+          </div>
+
+          <h3>Taxa Condominial — {{ inv.referenceMonth }}</h3>
+          <div class="amount-display">
+            {{ inv.amount | currency:'BRL':'symbol':'1.2-2' }}
+          </div>
+          <p class="notes" *ngIf="inv.notes">{{ inv.notes }}</p>
+
+          <!-- Extrato Detalhado (Exibido quando houver reserva de Salão ou Quiosque somada) -->
+          <div class="breakdown-box" *ngIf="inv.extraCharges && inv.extraCharges.length > 0">
+            <div class="b-row">
+              <span>Taxa Condominial Base</span>
+              <strong>{{ (inv.baseAmount || inv.amount) | currency:'BRL':'symbol':'1.2-2' }}</strong>
+            </div>
+            <div class="b-row extra" *ngFor="let ex of inv.extraCharges">
+              <span>+ {{ ex.description }}</span>
+              <strong>{{ ex.amount | currency:'BRL':'symbol':'1.2-2' }}</strong>
+            </div>
+          </div>
+
+          <!-- Linha Digitável Visível -->
+          <div class="barcode-box">
+            <small>Linha Digitável do Boleto</small>
+            <code>{{ inv.barcode }}</code>
+          </div>
+
+          <!-- Botões de Pagamento em 1 Toque -->
+          <div class="pay-actions">
+            <button
+              *ngIf="inv.pixCode"
+              type="button"
+              class="btn-pix"
+              (click)="copyCode(inv.pixCode, 'Código Pix Copia e Cola')"
+            >
+              <span class="material-symbols-outlined">qr_code_2</span>
+              Copiar Pix Copia e Cola
+            </button>
+
+            <button
+              type="button"
+              class="btn-barcode"
+              (click)="copyCode(inv.barcode, 'Código de barras')"
+            >
+              <span class="material-symbols-outlined">content_copy</span>
+              Copiar Código de Barras
+            </button>
+
+            <a
+              *ngIf="inv.pdfUrl"
+              [href]="inv.pdfUrl"
+              target="_blank"
+              class="btn-pdf"
+            >
+              <span class="material-symbols-outlined">picture_as_pdf</span>
+              Abrir Boleto Completo (PDF)
+            </a>
+          </div>
+        </article>
+      </ng-container>
+    </section>
+
+    <!-- Histórico de Pagamentos -->
+    <section class="invoice-section">
+      <h2>Histórico de Pagamentos</h2>
+
+      <ng-container *ngIf="paidInvoices$ | async as paidList">
+        <div *ngIf="paidList.length === 0" class="empty-state compact">
+          <p>Nenhum histórico de pagamento anterior registrado.</p>
+        </div>
+
+        <div class="paid-card" *ngFor="let item of paidList">
+          <div class="paid-left">
+            <div class="paid-icon">
+              <span class="material-symbols-outlined">task_alt</span>
+            </div>
+            <div>
+              <strong>{{ item.referenceMonth }}</strong>
+              <span>
+                Vencimento {{ item.dueDate | date:'dd/MM/yyyy' }} •
+                {{ item.amount | currency:'BRL':'symbol':'1.2-2' }}
+              </span>
+            </div>
+          </div>
+
+          <span class="paid-badge">Pago</span>
+        </div>
+      </ng-container>
+    </section>
+  </ng-container>
+</div>

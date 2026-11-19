@@ -1,0 +1,98 @@
+<div class="app-page">
+  <header class="pkg-topbar" *ngIf="authService.currentUser$ | async as user">
+    <div>
+      <h1>Minhas Encomendas</h1>
+      <span>Controle de retiradas • Casa {{ user.houseNumber }}</span>
+    </div>
+  </header>
+
+  <a *appHasRole="['porteiro', 'sindico']" routerLink="/admin/portaria" class="btn-portaria-desk">
+    <span class="material-symbols-outlined">inventory_2</span>
+    <div>
+      <strong>Balcão da Portaria</strong>
+      <span>Cadastrar nova encomenda ou dar baixa com PIN</span>
+    </div>
+    <span class="material-symbols-outlined">chevron_right</span>
+  </a>
+
+  <div *ngIf="(authService.canVote$ | async) === false" class="empty-card">
+    <span class="material-symbols-outlined">hourglass_top</span>
+    <p>Aguarde a aprovação da sua unidade pelo síndico para visualizar os pacotes da casa.</p>
+  </div>
+
+  <ng-container *ngIf="authService.canVote$ | async">
+    <!-- Tickets Pendentes -->
+    <section class="ticket-section">
+      <h2>Disponíveis na Portaria</h2>
+
+      <ng-container *ngIf="pendingPackages$ | async as pending">
+        <div *ngIf="pending.length === 0" class="empty-card">
+          <span class="material-symbols-outlined">inventory_2</span>
+          <p>Tudo em dia! Nenhuma encomenda aguardando retirada.</p>
+        </div>
+
+        <article class="parcel-ticket" *ngFor="let pkg of pending">
+          <div class="ticket-upper">
+            <div class="ticket-row">
+              <span class="carrier-pill" [attr.data-carrier]="pkg.carrier">
+                {{ pkg.carrier }}
+              </span>
+              <span class="time-stamp">{{ pkg.receivedAt | date:'dd/MM • HH:mm' }}</span>
+            </div>
+
+            <h3>Destinatário: {{ pkg.recipientName }}</h3>
+
+            <div class="shelf-badge" *ngIf="pkg.storageLocation">
+              <span class="material-symbols-outlined">shelves</span>
+              {{ pkg.storageLocation }}
+            </div>
+          </div>
+
+          <!-- Divisor com Picote Lateral -->
+          <div class="ticket-divider">
+            <span class="cutout left"></span>
+            <div class="dashed-line"></div>
+            <span class="cutout right"></span>
+          </div>
+
+          <div class="ticket-lower">
+            <div class="pin-digits">
+              <span class="digit-box" *ngFor="let d of (pkg.pickupPin || '0000').split('')">
+                {{ d }}
+              </span>
+            </div>
+            <span class="pin-caption">Informe este PIN ao porteiro para retirar</span>
+          </div>
+        </article>
+      </ng-container>
+    </section>
+
+    <!-- Linha do Tempo do Histórico -->
+    <section class="ticket-section">
+      <h2>Histórico da Casa</h2>
+
+      <ng-container *ngIf="deliveredPackages$ | async as history">
+        <div *ngIf="history.length === 0" class="empty-card compact">
+          <p>Nenhuma retirada anterior registrada.</p>
+        </div>
+
+        <div class="timeline-card" *ngFor="let pkg of history">
+          <div class="timeline-icon">
+            <span class="material-symbols-outlined">check_circle</span>
+          </div>
+          <div class="timeline-body">
+            <div class="timeline-top">
+              <strong>{{ pkg.carrier }}</strong>
+              <span class="delivered-tag">Entregue</span>
+            </div>
+            <p>
+              Retirado por <strong>{{ pkg.pickedUpByName }}</strong> às
+              {{ pkg.pickedUpAt | date:'HH:mm (dd/MM)' }}
+            </p>
+            <small>Liberado na portaria por {{ pkg.releasedByName }}</small>
+          </div>
+        </div>
+      </ng-container>
+    </section>
+  </ng-container>
+</div>

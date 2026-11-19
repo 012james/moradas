@@ -1,0 +1,250 @@
+<div class="app-page">
+  <header class="concierge-header">
+    <div>
+      <a routerLink="/admin" class="back-nav">
+        <span class="material-symbols-outlined">arrow_back_ios_new</span>
+        Painel
+      </a>
+      <h1>Balcão da Portaria</h1>
+    </div>
+
+    <span class="shift-pill">
+      <span class="dot"></span>
+      Turno Ativo
+    </span>
+  </header>
+
+  <!-- Card de Entrada Rápida (3 Toques) -->
+  <section class="quick-entry-card">
+    <div class="card-head">
+      <span class="material-symbols-outlined">add_box</span>
+      <h2>Entrada Rápida (3 Toques)</h2>
+    </div>
+
+    <div class="input-grid">
+      <div class="form-group house-input">
+        <label>Casa (1-600)</label>
+        <input
+          type="number"
+          min="1"
+          max="600"
+          [(ngModel)]="houseNumber"
+          (ngModelChange)="onHouseNumberChange()"
+          placeholder="402"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Destinatário na Etiqueta</label>
+        <input
+          type="text"
+          [(ngModel)]="recipientName"
+          placeholder="Ex: Maria Silva"
+        />
+      </div>
+    </div>
+
+    <!-- Sugestão Inteligente de Moradores Cadastrados na Casa -->
+    <div class="resident-suggestions" *ngIf="houseResidents.length > 0">
+      <span class="sug-label">Moradores da Casa {{ houseNumber }}:</span>
+      <div class="sug-chips">
+        <button
+          type="button"
+          *ngFor="let r of houseResidents"
+          (click)="fillRecipient(r.name)"
+        >
+          <span class="material-symbols-outlined">person</span>
+          {{ r.name }}
+        </button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Transportadora</label>
+      <div class="carrier-selector">
+        <button
+          type="button"
+          *ngFor="let c of carriers"
+          [class.selected]="selectedCarrier === c"
+          (click)="selectCarrier(c)"
+        >
+          {{ c }}
+        </button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Nicho / Prateleira (Opcional)</label>
+      <input
+        type="text"
+        [(ngModel)]="storageLocation"
+        placeholder="Ex: Prateleira B2 ou Pacote Grande"
+      />
+    </div>
+
+    <!-- Opção de Disparo Duplo (E-mail Automático + WhatsApp) -->
+    <label class="wa-auto-toggle">
+      <input type="checkbox" [(ngModel)]="openWhatsAppAfterSave" />
+      <span>
+        Enviar <strong>PIN por E-mail</strong> automaticamente e abrir
+        <strong>WhatsApp</strong> do morador ao salvar
+      </span>
+    </label>
+
+    <button
+      type="button"
+      class="btn-register"
+      (click)="onRegisterPackage()"
+      [disabled]="isSaving || !houseNumber || !recipientName.trim()"
+    >
+      <span class="material-symbols-outlined">notifications_active</span>
+      {{ isSaving ? 'Registrando e Enviando PIN...' : 'Registrar e Enviar PIN (E-mail + WhatsApp)' }}
+    </button>
+
+    <div class="toast-success" *ngIf="feedbackMsg">
+      <span class="material-symbols-outlined">check_circle</span>
+      {{ feedbackMsg }}
+    </div>
+  </section>
+
+  <!-- Fila de Retirada -->
+  <section class="queue-section">
+    <div class="queue-header">
+      <h2>Aguardando Retirada</h2>
+      <span class="queue-count">{{ pendingPackages.length }}</span>
+    </div>
+
+    <div class="search-field">
+      <span class="material-symbols-outlined">search</span>
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        placeholder="Filtrar por número da casa ou morador..."
+      />
+    </div>
+
+    <div *ngIf="filteredPackages.length === 0" class="empty-queue">
+      <span class="material-symbols-outlined">inventory</span>
+      <p>Nenhum pacote pendente para os filtros informados.</p>
+    </div>
+
+    <article
+      class="queue-card"
+      *ngFor="let pkg of filteredPackages"
+      [class.expanded]="activePackageId === pkg.id"
+    >
+      <div class="queue-summary">
+        <div class="summary-left">
+          <div class="tag-row">
+            <span class="house-tag">Casa {{ pkg.houseNumber }}</span>
+            <span class="carrier-tag">{{ pkg.carrier }}</span>
+            <span class="shelf-tag" *ngIf="pkg.storageLocation">
+              {{ pkg.storageLocation }}
+            </span>
+          </div>
+
+          <h3>{{ pkg.recipientName }}</h3>
+          <span class="meta-time">
+            Chegou {{ pkg.receivedAt | date:'dd/MM às HH:mm' }} • Porteiro {{ pkg.receivedByName }}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          class="btn-toggle-drawer"
+          (click)="openPickupPanel(pkg)"
+        >
+          {{ activePackageId === pkg.id ? 'Fechar' : 'Entregar' }}
+        </button>
+      </div>
+
+      <!-- Botões Rápidos para Reenviar o PIN no WhatsApp ou E-mail do Morador -->
+      <div class="notify-resident-bar">
+        <button
+          type="button"
+          class="btn-wa-pin"
+          (click)="notifyPackageViaWhatsApp(pkg)"
+        >
+          <span class="material-symbols-outlined">chat</span>
+          WhatsApp PIN
+        </button>
+
+        <button
+          type="button"
+          class="btn-mail-pin"
+          (click)="notifyPackageViaEmail(pkg)"
+        >
+          <span class="material-symbols-outlined">forward_to_inbox</span>
+          E-mail PIN
+        </button>
+      </div>
+
+      <!-- Gaveta de Validação de PIN -->
+      <div class="handover-drawer" *ngIf="activePackageId === pkg.id">
+        <div class="handover-tabs">
+          <button
+            type="button"
+            [class.active]="!manualMode"
+            (click)="manualMode = false; pickupError = ''"
+          >
+            <span class="material-symbols-outlined">pin</span>
+            Código PIN
+          </button>
+          <button
+            type="button"
+            [class.active]="manualMode"
+            (click)="manualMode = true; pickupError = ''"
+          >
+            <span class="material-symbols-outlined">badge</span>
+            Baixa com Documento
+          </button>
+        </div>
+
+        <div class="form-group">
+          <label>Retirado no balcão por</label>
+          <input
+            type="text"
+            [(ngModel)]="pickedUpByName"
+            placeholder="Nome de quem está levando"
+          />
+        </div>
+
+        <div class="form-group" *ngIf="!manualMode">
+          <label>Digite o PIN de 4 dígitos exibido no app/WhatsApp do morador</label>
+          <input
+            type="text"
+            maxlength="4"
+            inputmode="numeric"
+            class="pin-verify-input"
+            [(ngModel)]="enteredPin"
+            placeholder="• • • •"
+          />
+        </div>
+
+        <div class="form-group" *ngIf="manualMode">
+          <label>Documento com foto (RG ou CPF obrigatório)</label>
+          <input
+            type="text"
+            [(ngModel)]="pickedUpByDoc"
+            placeholder="Número do documento"
+          />
+        </div>
+
+        <div class="drawer-error" *ngIf="pickupError">
+          <span class="material-symbols-outlined">error</span>
+          {{ pickupError }}
+        </div>
+
+        <button
+          type="button"
+          class="btn-confirm-handover"
+          (click)="confirmRelease(pkg)"
+          [disabled]="isReleasing"
+        >
+          <span class="material-symbols-outlined">task_alt</span>
+          {{ isReleasing ? 'Validando...' : 'Confirmar Entrega' }}
+        </button>
+      </div>
+    </article>
+  </section>
+</div>

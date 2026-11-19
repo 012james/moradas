@@ -1,24 +1,52 @@
-<nav *ngIf="currentTab" class="bottom-nav">
-  <a (click)="openAtas()" [class.active]="currentTab === 'atas'" class="nav-item">
-    <span class="material-symbols-outlined">description</span>
-    <span>Atas</span>
+<nav class="floating-dock">
+  <a routerLink="/atas" routerLinkActive="active" class="dock-item">
+    <span class="material-symbols-outlined">home</span>
+    <span class="label">Início</span>
   </a>
 
-  <a routerLink="/avisos" routerLinkActive="active" class="nav-item">
-    <span class="material-symbols-outlined">campaign</span>
-    <span>Avisos</span>
+  <a routerLink="/encomendas" routerLinkActive="active" class="dock-item">
+    <div class="icon-wrap">
+      <span class="material-symbols-outlined">package_2</span>
+      <span class="badge" *ngIf="(pendingPackagesCount$ | async) as pkgCount">
+        {{ pkgCount }}
+      </span>
+    </div>
+    <span class="label">Encomendas</span>
   </a>
 
-  <a (click)="openProfile()" [class.active]="currentTab === 'perfil'" class="nav-item">
+  <a routerLink="/visitantes" routerLinkActive="active" class="dock-item">
+    <span class="material-symbols-outlined">badge</span>
+    <span class="label">Visitas</span>
+  </a>
+
+  <a routerLink="/boletos" routerLinkActive="active" class="dock-item">
+    <div class="icon-wrap">
+      <span class="material-symbols-outlined">receipt_long</span>
+      <span class="badge amber" *ngIf="(openInvoicesCount$ | async) as invCount">
+        {{ invCount }}
+      </span>
+    </div>
+    <span class="label">Boletos</span>
+  </a>
+
+  <!-- Para Moradores: exibe Perfil no 5º slot | Para Síndico/Porteiro: exibe Gestão -->
+  <a
+    *ngIf="(isStaff$ | async) === false"
+    routerLink="/perfil"
+    routerLinkActive="active"
+    class="dock-item"
+  >
     <span class="material-symbols-outlined">person</span>
-    <span>Perfil</span>
+    <span class="label">Perfil</span>
   </a>
 
-  <!-- O menu admin só aparece se o usuário existir e tiver a role 'admin' ou 'sindico' no banco de dados -->
-  <ng-container *ngIf="authService.currentUser$ | async as user">
-    <a (click)="openAtasCreate()" *ngIf="user.role === 'admin'" [class.active]="currentTab === 'admin'" class="nav-item admin-item">
-      <span class="material-symbols-outlined">admin_panel_settings</span>
-      <span>Admin</span>
-    </a>
-  </ng-container>
+  <a
+    *ngIf="isStaff$ | async"
+    routerLink="/admin"
+    routerLinkActive="active"
+    class="dock-item staff-tab"
+  >
+    <span class="material-symbols-outlined">admin_panel_settings</span>
+    <span class="label">Gestão</span>
+  </a>
 </nav>
