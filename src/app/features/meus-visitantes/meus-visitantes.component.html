@@ -69,8 +69,9 @@
         </div>
       </div>
 
-      <div class="grid-2">
-        <div class="field" *ngIf="activeTab === 'unico'">
+      <!-- Linha de Data e Placa -->
+      <div class="form-row-2col">
+        <div class="field-group" *ngIf="activeTab === 'unico'">
           <label>Data da Visita</label>
           <input type="date" [min]="todayStr" [(ngModel)]="validDate" />
         </div>
@@ -80,9 +81,9 @@
           <input type="text" [(ngModel)]="visitorDoc" placeholder="Opcional" />
         </div>
 
-        <div class="field">
-          <label>Placa do Veículo (Opcional)</label>
-          <input
+        <div class="field-group">
+          <label>Placa (Opcional)</label>
+           <input
             type="text"
             maxlength="8"
             [(ngModel)]="vehiclePlate"
@@ -92,7 +93,8 @@
         </div>
       </div>
 
-      <div class="field">
+      <!-- Campo de Observação (único) -->
+      <div class="field-group">
         <label>Observação para o Porteiro (Opcional)</label>
         <input
           type="text"
@@ -100,8 +102,7 @@
           [placeholder]="
             activeTab === 'unico'
               ? 'Ex: Técnico de internet / Convidado churrasco'
-              : 'Ex: Diarista às terças e sextas'
-          "
+              : 'Ex: Diarista às terças e sextas'"
         />
       </div>
 

@@ -1,14 +1,15 @@
 {
   "hosting": {
-    "headers": [
+    "public": "dist/moradas/browser",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
       {
         "source": "**",
-        "headers": [
-          {
-            "key": "Cross-Origin-Opener-Policy",
-            "value": "same-origin-allow-popups"
-          }
-        ]
+        "destination": "/index.html"
       }
     ]
   }
