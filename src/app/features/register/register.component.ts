@@ -22,6 +22,7 @@ export class RegisterComponent implements OnInit {
   authService = inject(AuthService);
   private router = inject(Router);
   private fb = inject(FormBuilder);
+  acceptedTerms = false;
 
   registerForm!: FormGroup;
   phone = '';

@@ -18,6 +18,6 @@ export class AppComponent {
     filter((event): event is NavigationEnd => event instanceof NavigationEnd),
     map((event) => event.urlAfterRedirects),
     startWith(this.router.url),
-    map((url) => !url.startsWith('/login') && !url.startsWith('/register'))
+    map((url) => !url.startsWith('/login') && !url.startsWith('/register') && !url.startsWith('/termos'))
   );
 }

@@ -12,7 +12,8 @@ import {
   doc,
   getDoc,
   setDoc,
-  onSnapshot
+  onSnapshot,
+  serverTimestamp
 } from '@angular/fire/firestore';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -155,7 +156,9 @@ export class AuthService {
       casaSolicitada: `${rua.trim()} - ${houseNumber}`,
       phone: cleanPhone,
       unitId: existingData?.['unitId'] || null,
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      termsAcceptedAt: serverTimestamp(), // Data e hora exatas do aceite
+      termsVersion: '1.0'                 // Versão do texto que ele leu
     };
 
     const userDocRef = doc(this.firestore, `users/${user.uid}`);
