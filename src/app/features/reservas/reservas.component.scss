@@ -222,23 +222,35 @@
 
 .date-row {
   display: flex;
-  align-items: flex-end;
-  gap: 0.65rem;
-  margin-bottom: 0.9rem;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-bottom: 1rem;
+
+  .field {
+    width: 100%;
+    margin: 0;
+  }
+}
+
+.availability-pill {
+  width: 100%;
 
   .avail-tag {
-    display: inline-block;
-    padding: 0.68rem 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.6rem 0.85rem;
     border-radius: 10px;
-    background: var(--success-bg);
-    color: var(--success-text);
-    font-size: 0.78rem;
-    font-weight: 800;
-    white-space: nowrap;
+    font-size: 0.82rem;
+    font-weight: 700;
+    background: #dcfce7;
+    color: #15803d;
+    box-sizing: border-box;
 
     &.busy {
-      background: var(--danger-bg);
-      color: var(--danger-text);
+      background: #fee2e2;
+      color: #b91c1c;
     }
   }
 }
@@ -382,7 +394,8 @@
 }
 
 .field {
-  margin-bottom: 0.75rem;
+  width: 100%;
+  margin: 0;
   label {
     display: block;
     font-size: 0.74rem;

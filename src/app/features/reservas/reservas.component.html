@@ -137,11 +137,11 @@
         <!-- Formulário de Data + Aceite do Termo -->
         <div class="booking-form" *ngIf="authService.canVote$ | async">
           <div class="date-row">
-            <div class="field" style="flex: 1; margin: 0;">
+            <div class="field">
               <label>Escolha a Data do Evento</label>
               <input type="date" [min]="minDate" [(ngModel)]="selectedDate" />
             </div>
-
+        
             <div class="availability-pill" *ngIf="selectedDate">
               <span class="avail-tag" [class.busy]="!!conflictReservation">
                 {{
