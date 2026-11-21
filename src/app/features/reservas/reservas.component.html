@@ -143,9 +143,11 @@
             </div>
         
             <div class="availability-pill" *ngIf="selectedDate">
-              <span class="avail-tag" [class.busy]="!!conflictReservation">
+              <span class="avail-tag" [class.busy]="isPastDate || !!conflictReservation">
                 {{
-                conflictReservation
+                isPastDate
+                ? '✕ Data anterior a hoje'
+                : conflictReservation
                 ? '✕ Data Indisponível'
                 : '✓ Data Disponível'
                 }}
@@ -167,11 +169,12 @@
           <button type="button" class="btn-primary-full" [disabled]="
               isSubmitting ||
               !selectedDate ||
+              isPastDate || 
               !!conflictReservation ||
               !acceptedTerms
-            " (click)="onConfirmReservation()">
+              " (click)="onConfirmReservation()">
             <span class="material-symbols-outlined">event_available</span>
-            {{ isSubmitting ? 'Confirmando...' : 'Confirmar Reserva da Unidade' }}
+            {{ isSubmitting ? 'Confirmando Reserva...' : 'Confirmar Reserva da Unidade' }}
           </button>
         </div>
       </article>

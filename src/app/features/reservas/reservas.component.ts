@@ -43,7 +43,19 @@ export class ReservasComponent implements OnInit, OnDestroy {
   toastMsg = '';
   errorMsg = '';
 
-  readonly minDate = new Date(Date.now() + 86400000).toISOString().split('T')[0]; // Amanhã
+  readonly minDate = this.getTodayLocalISO();
+
+  private getTodayLocalISO(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  get isPastDate(): boolean {
+    return !!this.selectedDate && this.selectedDate < this.minDate;
+  }
 
   ngOnInit(): void {
     this.userSub = this.authService.currentUser$.subscribe((u) => {
@@ -77,10 +89,10 @@ export class ReservasComponent implements OnInit, OnDestroy {
     );
   }
 
-  // Próximas datas já ocupadas deste espaço (exibe para o morador não escolher no escuro)
+  // Próximas datas já ocupadas deste espaço (apenas de hoje em diante)
   get occupiedDatesForActiveSpace(): ReservationItem[] {
     return this.allReservations
-      .filter((r) => r.spaceId === this.selectedSpaceId)
+      .filter((r) => r.spaceId === this.selectedSpaceId && r.date >= this.minDate)
       .slice(0, 6);
   }
 
@@ -103,8 +115,8 @@ export class ReservasComponent implements OnInit, OnDestroy {
     const space = this.activeSpace;
     if (!space || !this.selectedDate || !this.acceptedTerms) return;
 
-    if (this.selectedDate < this.minDate) {
-      this.errorMsg = 'Selecione uma data futura a partir de amanhã.';
+    if (this.isPastDate) {
+      this.errorMsg = 'Não é possível reservar datas anteriores a hoje.';
       return;
     }
 
