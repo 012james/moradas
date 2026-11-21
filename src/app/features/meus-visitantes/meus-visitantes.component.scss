@@ -271,3 +271,10 @@ input[type='date'] {
   color: var(--text-muted);
   font-size: 0.85rem;
 }
+
+.field-error {
+  margin-top: 0.35rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--danger-text, #b91c1c);
+}

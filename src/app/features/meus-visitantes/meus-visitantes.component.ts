@@ -7,7 +7,6 @@ import { AuthService } from '../../services/auth/auth.service';
 import { VisitorsService } from '../../services/visitors/visitors.service';
 import { VisitorAuthorization, VisitorAccessType, VisitorCategory } from '../../shared/models/visitor.model';
 
-
 @Component({
   selector: 'app-meus-visitantes',
   standalone: true,
@@ -26,23 +25,36 @@ export class MeusVisitantesComponent implements OnInit, OnDestroy {
 
   activeTab: VisitorAccessType = 'unico';
 
-  // Campos do Formulário
-  visitorName = '';
-  category: VisitorCategory = 'Convidado / Familiar';
-  vehiclePlate = '';
-  visitorDoc = '';
-  validDate = new Date().toISOString().split('T')[0];
-  notes = '';
-
+  readonly todayStr = this.getTodayLocalISO();
   readonly categories: VisitorCategory[] = [
     'Convidado / Familiar',
     'Prestador de Serviço',
     'Diarista / Fixo'
   ];
-  readonly todayStr = new Date().toISOString().split('T')[0];
+
+  // Campos do Formulário
+  visitorName = '';
+  category: VisitorCategory = 'Convidado / Familiar';
+  vehiclePlate = '';
+  visitorDoc = '';
+  validDate = this.todayStr;
+  notes = '';
 
   isSaving = false;
   toastMsg = '';
+  errorMsg = '';
+
+  private getTodayLocalISO(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  get isPastDate(): boolean {
+    return this.activeTab === 'unico' && (!this.validDate || this.validDate < this.todayStr);
+  }
 
   ngOnInit(): void {
     this.userSub = this.authService.currentUser$.subscribe((user) => {
@@ -78,15 +90,26 @@ export class MeusVisitantesComponent implements OnInit, OnDestroy {
 
   switchTab(tab: VisitorAccessType): void {
     this.activeTab = tab;
+    this.errorMsg = '';
     if (tab === 'permanente') {
       this.category = 'Diarista / Fixo';
     } else {
       this.category = 'Convidado / Familiar';
+      if (!this.validDate || this.validDate < this.todayStr) {
+        this.validDate = this.todayStr;
+      }
     }
   }
 
   async onAuthorize(): Promise<void> {
+    this.errorMsg = '';
     if (!this.visitorName.trim()) return;
+
+    if (this.isPastDate) {
+      this.errorMsg = 'Não é possível liberar visitas para datas anteriores a hoje.';
+      return;
+    }
+
     this.isSaving = true;
 
     try {
@@ -114,6 +137,7 @@ export class MeusVisitantesComponent implements OnInit, OnDestroy {
       this.visitorName = '';
       this.vehiclePlate = '';
       this.visitorDoc = '';
+      this.validDate = this.todayStr;
       this.notes = '';
       setTimeout(() => (this.toastMsg = ''), 3500);
     } finally {

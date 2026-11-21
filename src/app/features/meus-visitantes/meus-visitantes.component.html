@@ -74,6 +74,9 @@
         <div class="field-group" *ngIf="activeTab === 'unico'">
           <label>Data da Visita</label>
           <input type="date" [min]="todayStr" [(ngModel)]="validDate" />
+          <small class="field-error" *ngIf="isPastDate">
+            Selecione a data de hoje ou uma data futura.
+          </small>
         </div>
 
         <div class="field" *ngIf="activeTab === 'permanente'">
@@ -109,7 +112,7 @@
       <button
         type="button"
         class="btn-authorize"
-        [disabled]="isSaving || !visitorName.trim()"
+        [disabled]="isSaving || !visitorName.trim() || isPastDate"
         (click)="onAuthorize()"
       >
         <span class="material-symbols-outlined">how_to_reg</span>
