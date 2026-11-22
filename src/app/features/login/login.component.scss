@@ -64,12 +64,6 @@
  
   .logo-wrapper {
     width: 10rem;
-    height: 10rem;
-    margin-bottom: v.$spacing-md;
-    border-radius: v.$radius-lg;
-    overflow: hidden;
-    background-color: v.$color-surface;
-    box-shadow: v.$shadow-sm;
  
     @media (min-width: 640px) {
       width: 12rem;
