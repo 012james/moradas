@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "target": "principal",
     "public": "dist/moradas/browser",
     "ignore": [
       "firebase.json",

@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "condominiomoradas-42a17"
-  }
+  },
+  "targets": {
+    "condominiomoradas-42a17": {
+      "hosting": {
+        "principal": [
+          "appmoradas"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
