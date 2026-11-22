@@ -2,7 +2,7 @@
   <header class="page-topbar">
     <div>
       <a routerLink="/admin" class="back-link">
-        <span class="material-symbols-outlined">arrow_back_ios_new</span>
+        <span translate="no" class="material-symbols-outlined notranslate">arrow_back_ios_new</span>
         Painel de Gestão
       </a>
       <h1>Nova Assembleia</h1>
@@ -107,7 +107,7 @@
           [class.selected]="locationPreset === 'Virtual (App)'"
           (click)="selectLocationPreset('Virtual (App)')"
         >
-          <span class="material-symbols-outlined">smartphone</span>
+          <span translate="no" class="material-symbols-outlined notranslate">smartphone</span>
           Virtual (App)
         </button>
 
@@ -116,7 +116,7 @@
           [class.selected]="locationPreset === 'Salão de Festas (Híbrida)'"
           (click)="selectLocationPreset('Salão de Festas (Híbrida)')"
         >
-          <span class="material-symbols-outlined">groups</span>
+          <span translate="no" class="material-symbols-outlined notranslate">groups</span>
           Híbrida (Salão)
         </button>
 
@@ -142,7 +142,7 @@
     <!-- Anexo de Proposta Técnica (PDF) -->
     <div class="pdf-upload-box">
       <div class="pdf-box-head">
-        <span class="material-symbols-outlined">picture_as_pdf</span>
+        <span translate="no" class="material-symbols-outlined notranslate">picture_as_pdf</span>
         <div>
           <strong>Proposta Técnica ou Orçamento (PDF)</strong>
           <span>Cole o link do Google Drive ou arquivo público para consulta</span>
@@ -158,12 +158,12 @@
     </div>
 
     <div class="error-banner" *ngIf="errorMessage">
-      <span class="material-symbols-outlined">error</span>
+      <span translate="no" class="material-symbols-outlined notranslate">error</span>
       {{ errorMessage }}
     </div>
 
     <button type="submit" class="btn-publish" [disabled]="isSubmitting">
-      <span class="material-symbols-outlined">rocket_launch</span>
+      <span translate="no" class="material-symbols-outlined notranslate">rocket_launch</span>
       {{ isSubmitting ? 'Publicando Edital...' : 'Publicar Assembleia Agora' }}
     </button>
   </form>

@@ -8,7 +8,7 @@
       (click)="goBack()"
       aria-label="Voltar para login"
     >
-      <span class="material-symbols-outlined icon">arrow_back</span>
+      <span translate="no" class="material-symbols-outlined notranslate icon">arrow_back</span>
       <span>Voltar</span>
     </button>
   </div>
@@ -46,12 +46,11 @@
             type="text"
             id="nome"
             formControlName="nome"
-            placeholder="Maria João Silva"
             (focus)="onFocus('nome')"
             (blur)="onBlur()"
             class="form-input"
           />
-          <span class="material-symbols-outlined input-icon">person</span>
+          <span translate="no" class="material-symbols-outlined notranslate input-icon">person</span>
         </div>
 
         <!-- Grupo de Endereço: Rua / Alameda + Número da Casa (2 colunas) -->
@@ -75,7 +74,7 @@
                 {{ opt }}
               </option>
             </select>
-            <span class="material-symbols-outlined input-icon pointer-events-none">
+            <span translate="no" class="material-symbols-outlined notranslate input-icon pointer-events-none">
               expand_more
             </span>
           </div>
@@ -97,7 +96,7 @@
               (blur)="onBlur()"
               class="form-input"
             />
-            <span class="material-symbols-outlined input-icon">tag</span>
+            <span translate="no" class="material-symbols-outlined notranslate input-icon">tag</span>
           </div>
         </div>
 
@@ -118,6 +117,24 @@
           </small>
         </div>
 
+        <div class="terms-accept-group">
+          <label class="terms-checkbox-label">
+            <input
+              type="checkbox"
+              name="acceptedTerms"
+              [(ngModel)]="acceptedTerms"
+              [ngModelOptions]="{ standalone: true }"
+              class="terms-checkbox"
+            />
+              <div class="terms-footer">
+                <p class="terms-text">
+                  Ao criar sua conta, você concorda com nossos
+                  <a routerLink="/termos" class="terms-link">Termos de Uso e Política de Privacidade</a>.
+                </p>
+              </div>
+          </label>
+        </div>
+
         <!-- Botão Criar Conta -->
         <button
           type="submit"
@@ -125,17 +142,9 @@
           [disabled]="registerForm.invalid || isSubmitting || !acceptedTerms"
         >
           <span>{{ isSubmitting ? 'Cadastrando...' : 'Criar Conta' }}</span>
-          <span class="material-symbols-outlined">arrow_forward</span>
+          <span translate="no" class="material-symbols-outlined notranslate">arrow_forward</span>
         </button>
       </form>
     </div>
-  </div>
-
-  <!-- Termos e Privacidade -->
-  <div class="terms-footer">
-    <p class="terms-text">
-      Ao criar sua conta, você concorda com nossos
-      <a routerLink="/termos" class="terms-link">Termos de Uso e Política de Privacidade</a>.
-    </p>
   </div>
 </div>

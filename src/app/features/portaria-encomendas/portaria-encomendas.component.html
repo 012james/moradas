@@ -2,7 +2,7 @@
   <header class="concierge-header">
     <div>
       <a routerLink="/admin" class="back-nav">
-        <span class="material-symbols-outlined">arrow_back_ios_new</span>
+        <span translate="no" class="material-symbols-outlined notranslate">arrow_back_ios_new</span>
         Painel
       </a>
       <h1>Balcão da Portaria</h1>
@@ -17,7 +17,7 @@
   <!-- Card de Entrada Rápida (3 Toques) -->
   <section class="quick-entry-card">
     <div class="card-head">
-      <span class="material-symbols-outlined">add_box</span>
+      <span translate="no" class="material-symbols-outlined notranslate">add_box</span>
       <h2>Entrada Rápida (3 Toques)</h2>
     </div>
 
@@ -53,7 +53,7 @@
           *ngFor="let r of houseResidents"
           (click)="fillRecipient(r.name)"
         >
-          <span class="material-symbols-outlined">person</span>
+          <span translate="no" class="material-symbols-outlined notranslate">person</span>
           {{ r.name }}
         </button>
       </div>
@@ -97,12 +97,12 @@
       (click)="onRegisterPackage()"
       [disabled]="isSaving || !houseNumber || !recipientName.trim()"
     >
-      <span class="material-symbols-outlined">notifications_active</span>
+      <span translate="no" class="material-symbols-outlined notranslate">notifications_active</span>
       {{ isSaving ? 'Registrando e Enviando PIN...' : 'Registrar e Enviar PIN (E-mail + WhatsApp)' }}
     </button>
 
     <div class="toast-success" *ngIf="feedbackMsg">
-      <span class="material-symbols-outlined">check_circle</span>
+      <span translate="no" class="material-symbols-outlined notranslate">check_circle</span>
       {{ feedbackMsg }}
     </div>
   </section>
@@ -115,7 +115,7 @@
     </div>
 
     <div class="search-field">
-      <span class="material-symbols-outlined">search</span>
+      <span translate="no" class="material-symbols-outlined notranslate">search</span>
       <input
         type="text"
         [(ngModel)]="searchTerm"
@@ -124,7 +124,7 @@
     </div>
 
     <div *ngIf="filteredPackages.length === 0" class="empty-queue">
-      <span class="material-symbols-outlined">inventory</span>
+      <span translate="no" class="material-symbols-outlined notranslate">inventory</span>
       <p>Nenhum pacote pendente para os filtros informados.</p>
     </div>
 
@@ -165,7 +165,7 @@
           class="btn-wa-pin"
           (click)="notifyPackageViaWhatsApp(pkg)"
         >
-          <span class="material-symbols-outlined">chat</span>
+          <span translate="no" class="material-symbols-outlined notranslate">chat</span>
           WhatsApp PIN
         </button>
 
@@ -174,7 +174,7 @@
           class="btn-mail-pin"
           (click)="notifyPackageViaEmail(pkg)"
         >
-          <span class="material-symbols-outlined">forward_to_inbox</span>
+          <span translate="no" class="material-symbols-outlined notranslate">forward_to_inbox</span>
           E-mail PIN
         </button>
       </div>
@@ -187,7 +187,7 @@
             [class.active]="!manualMode"
             (click)="manualMode = false; pickupError = ''"
           >
-            <span class="material-symbols-outlined">pin</span>
+            <span translate="no" class="material-symbols-outlined notranslate">pin</span>
             Código PIN
           </button>
           <button
@@ -195,7 +195,7 @@
             [class.active]="manualMode"
             (click)="manualMode = true; pickupError = ''"
           >
-            <span class="material-symbols-outlined">badge</span>
+            <span translate="no" class="material-symbols-outlined notranslate">badge</span>
             Baixa com Documento
           </button>
         </div>
@@ -231,7 +231,7 @@
         </div>
 
         <div class="drawer-error" *ngIf="pickupError">
-          <span class="material-symbols-outlined">error</span>
+          <span translate="no" class="material-symbols-outlined notranslate">error</span>
           {{ pickupError }}
         </div>
 
@@ -241,7 +241,7 @@
           (click)="confirmRelease(pkg)"
           [disabled]="isReleasing"
         >
-          <span class="material-symbols-outlined">task_alt</span>
+          <span translate="no" class="material-symbols-outlined notranslate">task_alt</span>
           {{ isReleasing ? 'Validando...' : 'Confirmar Entrega' }}
         </button>
       </div>

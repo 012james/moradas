@@ -2,7 +2,7 @@
   <!-- Barra Superior -->
   <div class="detail-topbar">
     <button type="button" class="btn-back" (click)="goBack()">
-      <span class="material-symbols-outlined">arrow_back_ios_new</span>
+      <span translate="no" class="material-symbols-outlined notranslate">arrow_back_ios_new</span>
       Voltar
     </button>
 
@@ -35,13 +35,13 @@
       rel="noopener noreferrer"
     >
       <div class="pdf-icon">
-        <span class="material-symbols-outlined">description</span>
+        <span translate="no" class="material-symbols-outlined notranslate">description</span>
       </div>
       <div class="pdf-text">
         <strong>Proposta Técnica e Orçamentos</strong>
         <span>Documento oficial em PDF</span>
       </div>
-      <span class="material-symbols-outlined pdf-download">download</span>
+      <span translate="no" class="material-symbols-outlined notranslate pdf-download">download</span>
     </a>
   </section>
 
@@ -49,7 +49,7 @@
   <section class="meta-grid">
     <div class="meta-box">
       <div class="meta-icon">
-        <span class="material-symbols-outlined">calendar_today</span>
+        <span translate="no" class="material-symbols-outlined notranslate">calendar_today</span>
       </div>
       <div class="meta-info">
         <span>Data Limite</span>
@@ -64,7 +64,7 @@
 
     <div class="meta-box">
       <div class="meta-icon">
-        <span class="material-symbols-outlined">location_on</span>
+        <span translate="no" class="material-symbols-outlined notranslate">location_on</span>
       </div>
       <div class="meta-info">
         <span>Local</span>
@@ -126,7 +126,7 @@
         <ng-container [ngSwitch]="currentVote">
           <ng-container *ngSwitchCase="'favor'">
             <div class="rec-icon">
-              <span class="material-symbols-outlined">thumb_up</span>
+              <span translate="no" class="material-symbols-outlined notranslate">thumb_up</span>
             </div>
             <div class="rec-text">
               <span class="rec-tag">Opção escolhida</span>
@@ -137,7 +137,7 @@
 
           <ng-container *ngSwitchCase="'contra'">
             <div class="rec-icon">
-              <span class="material-symbols-outlined">thumb_down</span>
+              <span translate="no" class="material-symbols-outlined notranslate">thumb_down</span>
             </div>
             <div class="rec-text">
               <span class="rec-tag">Opção escolhida</span>
@@ -148,7 +148,7 @@
 
           <ng-container *ngSwitchCase="'abster'">
             <div class="rec-icon">
-              <span class="material-symbols-outlined">do_not_disturb_on</span>
+              <span translate="no" class="material-symbols-outlined notranslate">do_not_disturb_on</span>
             </div>
             <div class="rec-text">
               <span class="rec-tag">Opção escolhida</span>
@@ -158,7 +158,7 @@
           </ng-container>
         </ng-container>
 
-        <span class="material-symbols-outlined rec-check">check_circle</span>
+        <span translate="no" class="material-symbols-outlined notranslate rec-check">check_circle</span>
       </div>
 
       <button
@@ -167,7 +167,7 @@
         [disabled]="isSubmitting"
         (click)="startChangeVote()"
       >
-        <span class="material-symbols-outlined">edit</span>
+        <span translate="no" class="material-symbols-outlined notranslate">edit</span>
         Mudar meu voto
       </button>
     </ng-container>
@@ -191,13 +191,13 @@
           (click)="vote('favor')"
         >
           <div class="opt-icon">
-            <span class="material-symbols-outlined">thumb_up</span>
+            <span translate="no" class="material-symbols-outlined notranslate">thumb_up</span>
           </div>
           <div class="opt-text">
             <strong>A Favor</strong>
             <span>Concordo com a proposta apresentada</span>
           </div>
-          <span class="material-symbols-outlined opt-arrow">
+          <span translate="no" class="material-symbols-outlined notranslate opt-arrow">
             {{ currentVote === 'favor' ? 'check_circle' : 'chevron_right' }}
           </span>
         </button>
@@ -210,13 +210,13 @@
           (click)="vote('contra')"
         >
           <div class="opt-icon">
-            <span class="material-symbols-outlined">thumb_down</span>
+            <span translate="no" class="material-symbols-outlined notranslate">thumb_down</span>
           </div>
           <div class="opt-text">
             <strong>Contra</strong>
             <span>Reprovo o orçamento ou execução</span>
           </div>
-          <span class="material-symbols-outlined opt-arrow">
+          <span translate="no" class="material-symbols-outlined notranslate opt-arrow">
             {{ currentVote === 'contra' ? 'check_circle' : 'chevron_right' }}
           </span>
         </button>
@@ -229,13 +229,13 @@
           (click)="vote('abster')"
         >
           <div class="opt-icon">
-            <span class="material-symbols-outlined">do_not_disturb_on</span>
+            <span translate="no" class="material-symbols-outlined notranslate">do_not_disturb_on</span>
           </div>
           <div class="opt-text">
             <strong>Abster-se</strong>
             <span>Registrar presença apenas para quórum</span>
           </div>
-          <span class="material-symbols-outlined opt-arrow">
+          <span translate="no" class="material-symbols-outlined notranslate opt-arrow">
             {{ currentVote === 'abster' ? 'check_circle' : 'chevron_right' }}
           </span>
         </button>
@@ -253,7 +253,7 @@
     </ng-container>
 
     <div class="audit-footer" *ngIf="authService.currentUser$ | async as user">
-      <span class="material-symbols-outlined">verified_user</span>
+      <span translate="no" class="material-symbols-outlined notranslate">verified_user</span>
       <span>Voto único auditado e vinculado à Casa {{ user.houseNumber || '--' }}</span>
     </div>
   </section>
@@ -264,7 +264,7 @@
     *ngIf="ata.status === 'closed' || ata.status === 'encerrada'"
     [class.rejected]="ata.outcome === 'reprovada' || ata.outcome === 'rejected'"
   >
-    <span class="material-symbols-outlined">
+    <span translate="no" class="material-symbols-outlined notranslate">
       {{
         ata.outcome === 'reprovada' || ata.outcome === 'rejected'
           ? 'cancel'

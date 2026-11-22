@@ -7,7 +7,7 @@
   </header>
 
   <div class="toast-ok" *ngIf="toastMsg">
-    <span class="material-symbols-outlined">check_circle</span>
+    <span translate="no" class="material-symbols-outlined notranslate">check_circle</span>
     {{ toastMsg }}
   </div>
 
@@ -47,7 +47,7 @@
           class="btn-syndic-action"
           (click)="showNoticeForm = !showNoticeForm"
         >
-          <span class="material-symbols-outlined">
+          <span translate="no" class="material-symbols-outlined notranslate">
             {{ showNoticeForm ? 'close' : 'add_alert' }}
           </span>
           {{ showNoticeForm ? 'Cancelar Novo Aviso' : 'Publicar Novo Comunicado' }}
@@ -102,7 +102,7 @@
     </ng-container>
 
     <div class="empty-box" *ngIf="notices.length === 0">
-      <span class="material-symbols-outlined">campaign</span>
+      <span translate="no" class="material-symbols-outlined notranslate">campaign</span>
       <h3>Nenhum aviso publicado</h3>
       <p>Comunicados da administração e alertas de manutenção aparecerão aqui.</p>
     </div>
@@ -131,7 +131,7 @@
             class="btn-wa-mini"
             (click)="shareNoticeWhatsApp(n)"
           >
-            <span class="material-symbols-outlined">chat</span>
+            <span translate="no" class="material-symbols-outlined notranslate">chat</span>
             WhatsApp
           </button>
 
@@ -141,7 +141,7 @@
               class="btn-del-mini"
               (click)="deleteNotice(n.id)"
             >
-              <span class="material-symbols-outlined">delete</span>
+              <span translate="no" class="material-symbols-outlined notranslate">delete</span>
             </button>
           </ng-container>
         </div>
@@ -160,7 +160,7 @@
           class="btn-syndic-action"
           (click)="editingContacts ? (editingContacts = false) : startEditContacts()"
         >
-          <span class="material-symbols-outlined">
+          <span translate="no" class="material-symbols-outlined notranslate">
             {{ editingContacts ? 'close' : 'edit' }}
           </span>
           {{ editingContacts ? 'Fechar Edição' : 'Editar Telefones' }}
@@ -209,7 +209,7 @@
     <article class="contact-card">
       <div class="c-head">
         <div class="c-icon blue">
-          <span class="material-symbols-outlined">shield_person</span>
+          <span translate="no" class="material-symbols-outlined notranslate">shield_person</span>
         </div>
         <div>
           <h3>Portaria 24 Horas</h3>
@@ -223,7 +223,7 @@
           [href]="'tel:' + contacts.portariaPhone"
           class="btn-call"
         >
-          <span class="material-symbols-outlined">call</span>
+          <span translate="no" class="material-symbols-outlined notranslate">call</span>
           Ligar
         </a>
         <a
@@ -233,7 +233,7 @@
           rel="noopener noreferrer"
           class="btn-wa-contact"
         >
-          <span class="material-symbols-outlined">chat</span>
+          <span translate="no" class="material-symbols-outlined notranslate">chat</span>
           WhatsApp
         </a>
       </div>
@@ -242,7 +242,7 @@
     <article class="contact-card">
       <div class="c-head">
         <div class="c-icon green">
-          <span class="material-symbols-outlined">support_agent</span>
+          <span translate="no" class="material-symbols-outlined notranslate">support_agent</span>
         </div>
         <div>
           <h3>Secretaria / Administração</h3>
@@ -257,7 +257,7 @@
           [href]="'tel:' + contacts.secretariaPhone"
           class="btn-call"
         >
-          <span class="material-symbols-outlined">call</span>
+          <span translate="no" class="material-symbols-outlined notranslate">call</span>
           Ligar
         </a>
         <a
@@ -267,7 +267,7 @@
           rel="noopener noreferrer"
           class="btn-wa-contact"
         >
-          <span class="material-symbols-outlined">chat</span>
+          <span translate="no" class="material-symbols-outlined notranslate">chat</span>
           WhatsApp
         </a>
       </div>
@@ -285,7 +285,7 @@
           class="btn-syndic-action"
           (click)="editingRules ? (editingRules = false) : startEditRules()"
         >
-          <span class="material-symbols-outlined">
+          <span translate="no" class="material-symbols-outlined notranslate">
             {{ editingRules ? 'close' : 'gavel' }}
           </span>
           {{ editingRules ? 'Fechar Edição' : 'Editar Regras Gerais' }}
@@ -318,7 +318,7 @@
       <h2>Regimento Interno Resumido</h2>
       <ul class="rules-list">
         <li *ngFor="let rule of rules">
-          <span class="material-symbols-outlined">check_circle</span>
+          <span translate="no" class="material-symbols-outlined notranslate">check_circle</span>
           <span>{{ rule }}</span>
         </li>
       </ul>

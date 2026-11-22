@@ -2,7 +2,7 @@
   <header class="gate-header">
     <div>
       <a routerLink="/admin" class="back-link">
-        <span class="material-symbols-outlined">arrow_back_ios_new</span>
+        <span translate="no" class="material-symbols-outlined notranslate">arrow_back_ios_new</span>
         Painel
       </a>
       <h1>Controle de Visitantes</h1>
@@ -17,7 +17,7 @@
   <!-- Busca Instantânea por Casa, Nome ou Placa -->
   <div class="gate-filter-row">
     <div class="house-filter-box" [class.active]="houseFilter !== null">
-      <span class="material-symbols-outlined">home</span>
+      <span translate="no" class="material-symbols-outlined notranslate">home</span>
       <input
         type="number"
         min="1"
@@ -33,12 +33,12 @@
         (click)="houseFilter = null"
         aria-label="Limpar filtro da casa"
       >
-        <span class="material-symbols-outlined">close</span>
+        <span translate="no" class="material-symbols-outlined notranslate">close</span>
       </button>
     </div>
 
     <div class="gate-search-box">
-      <span class="material-symbols-outlined">search</span>
+      <span translate="no" class="material-symbols-outlined notranslate">search</span>
       <input
         type="text"
         [(ngModel)]="searchTerm"
@@ -50,7 +50,7 @@
         class="clear-btn"
         (click)="searchTerm = ''"
       >
-        <span class="material-symbols-outlined">close</span>
+        <span translate="no" class="material-symbols-outlined notranslate">close</span>
       </button>
     </div>
   </div>
@@ -88,7 +88,7 @@
   </div>
 
   <div class="toast-ok" *ngIf="toastMsg">
-    <span class="material-symbols-outlined">verified</span>
+    <span translate="no" class="material-symbols-outlined notranslate">verified</span>
     {{ toastMsg }}
   </div>
 
@@ -97,7 +97,7 @@
        ===================================================== -->
   <ng-container *ngIf="filterMode !== 'historico'">
     <div class="empty-gate" *ngIf="filteredList.length === 0">
-      <span class="material-symbols-outlined">person_off</span>
+      <span translate="no" class="material-symbols-outlined notranslate">person_off</span>
       <h3>Nenhuma liberação encontrada</h3>
       <p>Se o visitante não constar na lista, interfone para o morador da casa antes de liberar.</p>
     </div>
@@ -139,7 +139,7 @@
           [disabled]="processingId === v.id"
           (click)="confirmEntry(v)"
         >
-          <span class="material-symbols-outlined">login</span>
+          <span translate="no" class="material-symbols-outlined notranslate">login</span>
           Registrar Entrada
         </button>
       </div>
@@ -189,7 +189,7 @@
     </div>
 
     <div class="empty-gate" *ngIf="filteredLogs.length === 0">
-      <span class="material-symbols-outlined">history_toggle_off</span>
+      <span translate="no" class="material-symbols-outlined notranslate">history_toggle_off</span>
       <h3>Nenhum registro de entrada</h3>
       <p>Não há entradas gravadas para o filtro selecionado.</p>
     </div>

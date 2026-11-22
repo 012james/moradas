@@ -3,7 +3,7 @@
   <header class="approval-header">
     <div>
       <a routerLink="/admin" class="back-link">
-        <span class="material-symbols-outlined">arrow_back_ios_new</span>
+        <span translate="no" class="material-symbols-outlined notranslate">arrow_back_ios_new</span>
         Central de Gestão
       </a>
       <h1>Moradores & Cargos</h1>
@@ -16,7 +16,7 @@
 
   <!-- Toast de Feedback -->
   <div class="toast-banner" *ngIf="feedbackToast">
-    <span class="material-symbols-outlined">check_circle</span>
+    <span translate="no" class="material-symbols-outlined notranslate">check_circle</span>
     {{ feedbackToast }}
   </div>
 
@@ -41,7 +41,7 @@
 
   <!-- Busca Rápida -->
   <div class="search-box">
-    <span class="material-symbols-outlined">search</span>
+    <span translate="no" class="material-symbols-outlined notranslate">search</span>
     <input
       type="text"
       [(ngModel)]="searchTerm"
@@ -53,13 +53,13 @@
       class="btn-clear"
       (click)="searchTerm = ''"
     >
-      <span class="material-symbols-outlined">close</span>
+      <span translate="no" class="material-symbols-outlined notranslate">close</span>
     </button>
   </div>
 
   <!-- Estado Vazio -->
   <div class="empty-card" *ngIf="filteredUsers.length === 0">
-    <span class="material-symbols-outlined">
+    <span translate="no" class="material-symbols-outlined notranslate">
       {{ activeTab === 'pending' ? 'how_to_reg' : 'group_off' }}
     </span>
     <h3>
@@ -96,7 +96,7 @@
         </div>
 
         <p class="address-line">
-          <span class="material-symbols-outlined">location_on</span>
+          <span translate="no" class="material-symbols-outlined notranslate">location_on</span>
           {{ user.street || 'Endereço não informado' }}
         </p>
 
@@ -155,7 +155,7 @@
           [disabled]="processingId === user.id"
           (click)="approveOrRejectUser(user, 'rejected')"
         >
-          <span class="material-symbols-outlined">delete_forever</span>
+          <span translate="no" class="material-symbols-outlined notranslate">delete_forever</span>
           Recusar e Excluir
         </button>
 
@@ -165,7 +165,7 @@
           [disabled]="processingId === user.id"
           (click)="approveOrRejectUser(user, 'approved')"
         >
-          <span class="material-symbols-outlined">check</span>
+          <span translate="no" class="material-symbols-outlined notranslate">check</span>
           {{ processingId === user.id ? 'Salvando...' : 'Aprovar Acesso' }}
         </button>
       </div>

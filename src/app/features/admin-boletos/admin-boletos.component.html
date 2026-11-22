@@ -2,7 +2,7 @@
   <header class="top-bar">
     <div>
       <a routerLink="/admin" class="back-link">
-        <span class="material-symbols-outlined">arrow_back_ios_new</span>
+        <span translate="no" class="material-symbols-outlined notranslate">arrow_back_ios_new</span>
         Painel de Gestão
       </a>
       <h1>Gestão de Boletos</h1>
@@ -12,7 +12,7 @@
   </header>
 
   <div class="toast-ok" *ngIf="toastMsg">
-    <span class="material-symbols-outlined">check_circle</span>
+    <span translate="no" class="material-symbols-outlined notranslate">check_circle</span>
     {{ toastMsg }}
   </div>
 
@@ -24,7 +24,7 @@
         [class.active]="emitMode === 'individual'"
         (click)="emitMode = 'individual'"
       >
-        <span class="material-symbols-outlined">person</span>
+        <span translate="no" class="material-symbols-outlined notranslate">person</span>
         Individual (1 Casa)
       </button>
 
@@ -33,7 +33,7 @@
         [class.active]="emitMode === 'lote'"
         (click)="emitMode = 'lote'"
       >
-        <span class="material-symbols-outlined">holiday_village</span>
+        <span translate="no" class="material-symbols-outlined notranslate">holiday_village</span>
         Lote Mensal (Todas)
       </button>
     </div>
@@ -71,14 +71,14 @@
           *ngFor="let r of houseResidents"
           (click)="recipientName = r.name"
         >
-          <span class="material-symbols-outlined">person</span>
+          <span translate="no" class="material-symbols-outlined notranslate">person</span>
           {{ r.name }} {{ r.phone ? '• 📱' : '' }}
         </button>
       </div>
 
       <div class="unbilled-res-box" *ngIf="pendingHouseReservations.length > 0">
         <div class="unbilled-head">
-          <span class="material-symbols-outlined">celebration</span>
+          <span translate="no" class="material-symbols-outlined notranslate">celebration</span>
           <strong>
             {{ pendingHouseReservations.length }} reserva(s) pendente(s) na Casa {{ houseNumber }}
           </strong>
@@ -157,7 +157,7 @@
         [disabled]="isSubmitting || !houseNumber || !recipientName.trim() || !dueDate || !barcode.trim()"
         (click)="onEmitInvoice()"
       >
-        <span class="material-symbols-outlined">send</span>
+        <span translate="no" class="material-symbols-outlined notranslate">send</span>
         {{ isSubmitting ? 'Enviando...' : 'Salvar + Enviar (E-mail e WhatsApp)' }}
       </button>
     </ng-container>
@@ -167,7 +167,7 @@
          ========================================== -->
     <ng-container *ngIf="emitMode === 'lote'">
       <div class="batch-info-banner">
-        <span class="material-symbols-outlined">auto_awesome</span>
+        <span translate="no" class="material-symbols-outlined notranslate">auto_awesome</span>
         <p>
           Gera a mensalidade automaticamente para <strong>todas as casas com moradores aprovados</strong>.
           Unidades que já tiveram o boleto deste mês lançado serão ignoradas sem duplicar.
@@ -246,7 +246,7 @@
         [disabled]="isSubmitting || !referenceMonth.trim() || !dueDate || !amount"
         (click)="onEmitBulkInvoices()"
       >
-        <span class="material-symbols-outlined">bolt</span>
+        <span translate="no" class="material-symbols-outlined notranslate">bolt</span>
         {{
           isSubmitting
             ? 'Processando Lote das Unidades...'

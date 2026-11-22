@@ -7,7 +7,7 @@
     </div>
 
     <span class="role-badge" [class.sindico]="user.role === 'sindico' || user.role === 'secretaria'">
-      <span class="material-symbols-outlined">
+      <span translate="no" class="material-symbols-outlined notranslate">
         {{
         user.role === 'sindico'
         ? 'shield_person'
@@ -66,7 +66,7 @@
 
     <a routerLink="/admin/portaria" class="action-card">
       <div class="card-icon amber">
-        <span class="material-symbols-outlined">package_2</span>
+        <span translate="no" class="material-symbols-outlined notranslate">package_2</span>
       </div>
       <div class="card-content">
         <div class="title-row">
@@ -80,18 +80,18 @@
         </div>
         <p>Registrar pacotes recebidos, gerar PIN e dar baixa na entrega</p>
       </div>
-      <span class="material-symbols-outlined chevron">chevron_right</span>
+      <span translate="no" class="material-symbols-outlined notranslate chevron">chevron_right</span>
     </a>
 
     <a routerLink="/admin/visitantes" class="action-card">
       <div class="card-icon blue">
-        <span class="material-symbols-outlined">badge</span>
+        <span translate="no" class="material-symbols-outlined notranslate">badge</span>
       </div>
       <div class="card-content">
         <h3>Visitantes & Liberações</h3>
         <p>Consultar convidados do dia, lista permanente e registrar entrada</p>
       </div>
-      <span class="material-symbols-outlined chevron">chevron_right</span>
+      <span translate="no" class="material-symbols-outlined notranslate chevron">chevron_right</span>
     </a>
   </section>
 
@@ -103,35 +103,35 @@
     </div>
      <a routerLink="/admin/boletos" class="action-card">
       <div class="card-icon green">
-        <span class="material-symbols-outlined">receipt_long</span>
+        <span translate="no" class="material-symbols-outlined notranslate">receipt_long</span>
       </div>
       <div class="card-content">
         <h3>Mensalidades e Boletos</h3>
         <p>Emitir individual ou em lote com soma automática de reservas</p>
       </div>
-      <span class="material-symbols-outlined chevron">chevron_right</span>
+      <span translate="no" class="material-symbols-outlined notranslate chevron">chevron_right</span>
     </a>
 
     <a routerLink="/avisos" class="action-card">
       <div class="card-icon amber">
-        <span class="material-symbols-outlined">campaign</span>
+        <span translate="no" class="material-symbols-outlined notranslate">campaign</span>
       </div>
       <div class="card-content">
         <h3>Mural de Avisos & Comunicados</h3>
         <p>Publicar alertas urgentes, manutenções e enviar no WhatsApp</p>
       </div>
-      <span class="material-symbols-outlined chevron">chevron_right</span>
+      <span translate="no" class="material-symbols-outlined notranslate chevron">chevron_right</span>
     </a>
 
     <a routerLink="/reservas" class="action-card">
       <div class="card-icon green">
-        <span class="material-symbols-outlined">celebration</span>
+        <span translate="no" class="material-symbols-outlined notranslate">celebration</span>
       </div>
       <div class="card-content">
         <h3>Agenda Salão & Quiosques</h3>
         <p>Conferir reservas do dia para controle de chaves e convidados</p>
       </div>
-      <span class="material-symbols-outlined chevron">chevron_right</span>
+      <span translate="no" class="material-symbols-outlined notranslate chevron">chevron_right</span>
     </a>
   </section>
 
@@ -144,7 +144,7 @@
 
     <a routerLink="/admin/aprovacoes" class="action-card">
       <div class="card-icon purple">
-        <span class="material-symbols-outlined">how_to_reg</span>
+        <span translate="no" class="material-symbols-outlined notranslate">how_to_reg</span>
       </div>
       <div class="card-content">
         <div class="title-row">
@@ -158,25 +158,25 @@
         </div>
         <p>Liberar unidades (1 a 600) e definir porteiros ou síndicos</p>
       </div>
-      <span class="material-symbols-outlined chevron">chevron_right</span>
+      <span translate="no" class="material-symbols-outlined notranslate chevron">chevron_right</span>
     </a>
 
     <a routerLink="/admin/nova-ata" class="action-card">
       <div class="card-icon blue">
-        <span class="material-symbols-outlined">post_add</span>
+        <span translate="no" class="material-symbols-outlined notranslate">post_add</span>
       </div>
       <div class="card-content">
         <h3>Nova Assembleia / Votação</h3>
         <p>Abrir pauta oficial, anexar PDF e convocar moradores</p>
       </div>
-      <span class="material-symbols-outlined chevron">chevron_right</span>
+      <span translate="no" class="material-symbols-outlined notranslate chevron">chevron_right</span>
     </a>
   </section>
 
   <!-- Botão de Encerrar Sessão / Troca de Turno -->
   <section class="session-footer">
     <div class="logged-info">
-      <span class="material-symbols-outlined">account_circle</span>
+      <span translate="no" class="material-symbols-outlined notranslate">account_circle</span>
       <span>Conectado como <strong>{{ user.name || user.email }}</strong></span>
     </div>
 
@@ -186,7 +186,7 @@
       [disabled]="isLoggingOut"
       (click)="logout()"
     >
-      <span class="material-symbols-outlined">logout</span>
+      <span translate="no" class="material-symbols-outlined notranslate">logout</span>
       {{ isLoggingOut ? 'Saindo da conta...' : 'Sair da Conta' }}
     </button>
   </section>

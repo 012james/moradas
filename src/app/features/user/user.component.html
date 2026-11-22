@@ -16,7 +16,7 @@
         'rejected': user.status === 'rejected'
       }"
     >
-      <span class="material-symbols-outlined">
+      <span translate="no" class="material-symbols-outlined notranslate">
         {{ user.status === 'approved' ? 'verified' : 'schedule' }}
       </span>
       Casa {{ user.houseNumber || '--' }} •
@@ -43,7 +43,7 @@
     </a>
 
     <a routerLink="/reservas" routerLinkActive="active" class="dock-item">
-        <span class="material-symbols-outlined">celebration</span>
+        <span translate="no" class="material-symbols-outlined notranslate">celebration</span>
         <span class="label">Reservas</span>
     </a>
   </section>
@@ -54,7 +54,7 @@
 
     <div class="info-row">
       <div class="info-icon">
-        <span class="material-symbols-outlined">home_pin</span>
+        <span translate="no" class="material-symbols-outlined notranslate">home_pin</span>
       </div>
       <div class="info-text">
         <small>Endereço no Condomínio</small>
@@ -62,7 +62,7 @@
       </div>
       <div class="info-row">
       <div class="info-icon">
-        <span class="material-symbols-outlined">chat</span>
+        <span translate="no" class="material-symbols-outlined notranslate">chat</span>
       </div>
       <div class="info-text" style="flex: 1;">
         <small>WhatsApp para Encomendas e Boletos</small>
@@ -103,7 +103,7 @@
 
     <div class="info-row">
       <div class="info-icon">
-        <span class="material-symbols-outlined">how_to_vote</span>
+        <span translate="no" class="material-symbols-outlined notranslate">how_to_vote</span>
       </div>
       <div class="info-text">
         <small>Direito de Voto em Assembleias</small>
@@ -113,7 +113,7 @@
 
     <div class="info-row">
       <div class="info-icon">
-        <span class="material-symbols-outlined">shield_person</span>
+        <span translate="no" class="material-symbols-outlined notranslate">shield_person</span>
       </div>
       <div class="info-text">
         <small>Nível de Permissão</small>
@@ -129,18 +129,18 @@
     class="staff-shortcut-card"
   >
     <div class="shortcut-left">
-      <span class="material-symbols-outlined">admin_panel_settings</span>
+      <span translate="no" class="material-symbols-outlined notranslate">admin_panel_settings</span>
       <div>
         <strong>Acessar Painel de Gestão</strong>
         <span>Atalho administrativo habilitado para seu perfil</span>
       </div>
     </div>
-    <span class="material-symbols-outlined">chevron_right</span>
+    <span translate="no" class="material-symbols-outlined notranslate">chevron_right</span>
   </a>
 
   <!-- Botão de Logout -->
   <button type="button" class="btn-logout" (click)="onLogout()">
-    <span class="material-symbols-outlined">logout</span>
+    <span translate="no" class="material-symbols-outlined notranslate">logout</span>
     Sair da Conta
   </button>
 </div>

@@ -3,7 +3,7 @@
   <header class="top-header" *ngIf="user$ | async as user">
     <div class="brand-greeting">
       <div class="logo-badge">
-        <span class="material-symbols-outlined">home_pin</span>
+        <span translate="no" class="material-symbols-outlined notranslate">home_pin</span>
       </div>
       <div>
         <span class="sub-label">Condomínio Moradas</span>
@@ -22,28 +22,28 @@
   <section class="quick-services-grid">
     <a routerLink="/visitantes" class="q-service-item">
       <div class="q-icon blue">
-        <span class="material-symbols-outlined">how_to_reg</span>
+        <span translate="no" class="material-symbols-outlined notranslate">how_to_reg</span>
       </div>
       <span>Liberar Visita</span>
     </a>
 
     <a routerLink="/reservas" class="q-service-item">
       <div class="q-icon green">
-        <span class="material-symbols-outlined">celebration</span>
+        <span translate="no" class="material-symbols-outlined notranslate">celebration</span>
       </div>
       <span>Salão & Quiosques</span>
     </a>
 
     <a routerLink="/avisos" class="q-service-item">
       <div class="q-icon amber">
-        <span class="material-symbols-outlined">campaign</span>
+        <span translate="no" class="material-symbols-outlined notranslate">campaign</span>
       </div>
       <span>Avisos & Regras</span>
     </a>
 
     <a routerLink="/perfil" class="q-service-item">
       <div class="q-icon slate">
-        <span class="material-symbols-outlined">person</span>
+        <span translate="no" class="material-symbols-outlined notranslate">person</span>
       </div>
       <span>Minha Casa</span>
     </a>
@@ -52,7 +52,7 @@
   <!-- Botão de Criação de Ata (Exclusivo do Síndico) -->
   <div class="syndic-create-bar" *appHasRole="['sindico']">
     <a routerLink="/admin/nova-ata" class="btn-create-ata">
-      <span class="material-symbols-outlined">add_circle</span>
+      <span translate="no" class="material-symbols-outlined notranslate">add_circle</span>
       Nova Assembleia / Ata
     </a>
   </div>
@@ -64,7 +64,7 @@
     class="parcel-alert-banner"
   >
     <div class="alert-left">
-      <span class="material-symbols-outlined">package_2</span>
+      <span translate="no" class="material-symbols-outlined notranslate">package_2</span>
       <span>
         <strong>{{ pkgCount }} {{ pkgCount === 1 ? 'encomenda' : 'encomendas' }}</strong>
         na portaria
@@ -82,7 +82,7 @@
           <span class="pulse-dot"></span>
           Votação Aberta
         </span>
-        <span class="material-symbols-outlined hero-icon">how_to_vote</span>
+        <span translate="no" class="material-symbols-outlined notranslate hero-icon">how_to_vote</span>
       </div>
 
       <h2>{{ ata.title }}</h2>
@@ -103,12 +103,12 @@
 
       <div class="hero-footer">
         <span class="date-tag">
-          <span class="material-symbols-outlined">event</span>
+          <span translate="no" class="material-symbols-outlined notranslate">event</span>
           {{ ata.date | date:'dd MMM, yyyy' }}
         </span>
         <a [routerLink]="['/atas', ata.id]" class="btn-hero">
           Participar Agora
-          <span class="material-symbols-outlined">arrow_forward</span>
+          <span translate="no" class="material-symbols-outlined notranslate">arrow_forward</span>
         </a>
       </div>
 
@@ -119,7 +119,7 @@
           class="btn-syndic-wa"
           (click)="convocarNoWhatsApp(ata)"
         >
-          <span class="material-symbols-outlined">chat</span>
+          <span translate="no" class="material-symbols-outlined notranslate">chat</span>
           Convocar no WhatsApp
         </button>
 
@@ -129,7 +129,7 @@
           [disabled]="sendingEmailAtaId === ata.id"
           (click)="convocarPorEmail(ata)"
         >
-          <span class="material-symbols-outlined">forward_to_inbox</span>
+          <span translate="no" class="material-symbols-outlined notranslate">forward_to_inbox</span>
           {{ sendingEmailAtaId === ata.id ? 'Carregando...' : 'Enviar nos E-mails' }}
         </button>
       </div>
@@ -141,7 +141,7 @@
 
     <!-- Busca Rápida -->
     <div class="search-bar">
-      <span class="material-symbols-outlined">search</span>
+      <span translate="no" class="material-symbols-outlined notranslate">search</span>
       <input
         type="text"
         [(ngModel)]="searchTerm"
@@ -186,7 +186,7 @@
   <ng-template #pendingApprovalCard>
     <section class="pending-approval-card" *ngIf="user$ | async as user">
       <div class="pending-icon">
-        <span class="material-symbols-outlined">hourglass_top</span>
+        <span translate="no" class="material-symbols-outlined notranslate">hourglass_top</span>
       </div>
 
       <span class="pending-pill">

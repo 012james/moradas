@@ -7,16 +7,16 @@
   </header>
 
   <a *appHasRole="['porteiro', 'sindico']" routerLink="/admin/portaria" class="btn-portaria-desk">
-    <span class="material-symbols-outlined">inventory_2</span>
+    <span translate="no" class="material-symbols-outlined notranslate">inventory_2</span>
     <div>
       <strong>Balcão da Portaria</strong>
       <span>Cadastrar nova encomenda ou dar baixa com PIN</span>
     </div>
-    <span class="material-symbols-outlined">chevron_right</span>
+    <span translate="no" class="material-symbols-outlined notranslate">chevron_right</span>
   </a>
 
   <div *ngIf="(authService.canVote$ | async) === false" class="empty-card">
-    <span class="material-symbols-outlined">hourglass_top</span>
+    <span translate="no" class="material-symbols-outlined notranslate">hourglass_top</span>
     <p>Aguarde a aprovação da sua unidade pelo síndico para visualizar os pacotes da casa.</p>
   </div>
 
@@ -27,7 +27,7 @@
 
       <ng-container *ngIf="pendingPackages$ | async as pending">
         <div *ngIf="pending.length === 0" class="empty-card">
-          <span class="material-symbols-outlined">inventory_2</span>
+          <span translate="no" class="material-symbols-outlined notranslate">inventory_2</span>
           <p>Tudo em dia! Nenhuma encomenda aguardando retirada.</p>
         </div>
 
@@ -43,7 +43,7 @@
             <h3>Destinatário: {{ pkg.recipientName }}</h3>
 
             <div class="shelf-badge" *ngIf="pkg.storageLocation">
-              <span class="material-symbols-outlined">shelves</span>
+              <span translate="no" class="material-symbols-outlined notranslate">shelves</span>
               {{ pkg.storageLocation }}
             </div>
           </div>
@@ -78,7 +78,7 @@
 
         <div class="timeline-card" *ngFor="let pkg of history">
           <div class="timeline-icon">
-            <span class="material-symbols-outlined">check_circle</span>
+            <span translate="no" class="material-symbols-outlined notranslate">check_circle</span>
           </div>
           <div class="timeline-body">
             <div class="timeline-top">
