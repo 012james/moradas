@@ -3,7 +3,7 @@ export type VisitorCategory = 'Convidado / Familiar' | 'Prestador de Serviço' |
 
 export interface VisitorAuthorization {
   id: string;
-  houseNumber: number;           // 1 a 600
+  houseNumber: number;           // 1 a 606
   visitorName: string;
   visitorDoc?: string;           // RG/CPF opcional
   vehiclePlate?: string;         // Ex: "ABC-1D23"

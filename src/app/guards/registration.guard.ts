@@ -19,7 +19,7 @@ export const registrationGuard: CanActivateFn = () => {
       const snap = await getDoc(doc(firestore, `users/${firebaseUser.uid}`));
       const houseNumber = Number(snap.data()?.['houseNumber']);
 
-      if (!snap.exists() || !houseNumber || houseNumber < 1 || houseNumber > 600) {
+      if (!snap.exists() || !houseNumber || houseNumber < 1 || houseNumber > 606) {
         return router.createUrlTree(['/register']);
       }
 

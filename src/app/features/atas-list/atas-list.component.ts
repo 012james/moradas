@@ -178,7 +178,7 @@ export class AtasListComponent implements OnInit, OnDestroy {
   }
 
   getQuorumPercent(votesCount = 0): number {
-    return Math.min(100, Math.round((votesCount / 600) * 100));
+    return Math.min(100, Math.round((votesCount / 606) * 100));
   }
 
   convocarNoWhatsApp(ata: AssemblyItem): void {

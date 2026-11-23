@@ -17,7 +17,7 @@ export interface ReservationItem {
   spaceName: string;
   date: string;               // Formato YYYY-MM-DD
   feeSnapshot: number;        // Valor vigente no ato da reserva (vai para o próximo boleto)
-  houseNumber: number;        // 1 a 600
+  houseNumber: number;        // 1 a 606
   residentUid: string;
   residentName: string;
   residentPhone?: string;

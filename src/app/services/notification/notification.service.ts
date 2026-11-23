@@ -39,7 +39,7 @@ export class NotificationService {
 
   // --- NOTIFICAÇÕES DE ENCOMENDAS (E-MAIL E WHATSAPP POR CASA) ---
 
-  // 1. Busca todos os moradores aprovados vinculados àquela casa específica (1 a 600)
+  // 1. Busca todos os moradores aprovados vinculados àquela casa específica (1 a 606)
   async getApprovedResidentsByHouse(houseNumber: number): Promise<UserProfile[]> {
     const usersRef = collection(this.db, 'users');
     const q = query(
@@ -232,7 +232,7 @@ export class NotificationService {
       ``,
       `📅 *Prazo limite:* ${formattedDate}`,
       `📍 *Modalidade:* ${ata.location || 'Virtual pelo Aplicativo'}`,
-      `📊 *Participação atual:* ${ata.votesCount || 0} de 600 casas já votaram`,
+      `📊 *Participação atual:* ${ata.votesCount || 0} de 606 casas já votaram`,
       ``,
       `👉 *Registre o voto da sua unidade agora pelo link:*`,
       appUrl
@@ -268,9 +268,9 @@ export class NotificationService {
       `${ata.description}`,
       ``,
       `MODALIDADE: ${ata.location || 'Virtual (App)'}`,
-      `PARTICIPAÇÃO ATUAL: ${ata.votesCount || 0} de 600 unidades`,
+      `PARTICIPAÇÃO ATUAL: ${ata.votesCount || 0} de 606 unidades`,
       ``,
-      `Lembramos que cada residência (casas 1 a 600) possui direito a 1 voto auditado.`,
+      `Lembramos que cada residência (casas 1 a 606) possui direito a 1 voto auditado.`,
       `Acesse o aplicativo para consultar os anexos em PDF e registrar seu voto:`,
       `${appUrl}`,
       ``,

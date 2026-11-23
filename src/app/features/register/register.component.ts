@@ -48,7 +48,7 @@ export class RegisterComponent implements OnInit {
     this.registerForm = this.fb.group({
       nome: [googleName, [Validators.required, Validators.minLength(3)]],
       rua: ['', [Validators.required]],
-      numero: ['', [Validators.required, Validators.min(1), Validators.max(600)]]
+      numero: ['', [Validators.required, Validators.min(1), Validators.max(606)]]
     });
   }
 

@@ -28,7 +28,7 @@ import { registrationGuard } from './guards/registration.guard';
 
 export const routes: Routes = [
  
-  // --- ÁREA DO MORADOR (Casas 1 a 600) ---
+  // --- ÁREA DO MORADOR (Casas 1 a 606) ---
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: '', redirectTo: 'atas', pathMatch: 'full' },

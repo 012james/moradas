@@ -54,7 +54,7 @@ export class CondoHubService {
         id: 'silencio',
         icon: 'volume_off',
         title: 'Horário de Silêncio (22h às 08h)',
-        summary: 'Proibido som alto, festas ruidosas ou equipamentos barulhentos após as 22h em todas as 600 unidades.'
+        summary: 'Proibido som alto, festas ruidosas ou equipamentos barulhentos após as 22h em todas as 606 unidades.'
       },
       {
         id: 'obras',

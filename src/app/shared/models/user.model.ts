@@ -4,7 +4,7 @@ export interface UserProfile {
   email: string;
   phone?: string; // Ex: "5534999990000" ou "(34) 99999-0000"
   street: string;
-  houseNumber: number; // 1 a 600
+  houseNumber: number; // 1 a 606
   status: 'pending' | 'approved' | 'rejected';
   role: 'morador' | 'porteiro' | 'secretaria' | 'sindico';
 }

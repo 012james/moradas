@@ -78,7 +78,7 @@ export class AdminBoletosComponent implements OnInit, OnDestroy {
 
   // Substitua onHouseChange():
   async onHouseChange(): Promise<void> {
-    if (!this.houseNumber || this.houseNumber < 1 || this.houseNumber > 600) {
+    if (!this.houseNumber || this.houseNumber < 1 || this.houseNumber > 606) {
       this.houseResidents = [];
       this.pendingHouseReservations = [];
       return;

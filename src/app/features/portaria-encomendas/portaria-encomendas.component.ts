@@ -73,7 +73,7 @@ export class PortariaEncomendasComponent implements OnInit, OnDestroy {
 
   // Busca automaticamente os moradores da casa digitada para agilizar o balcão
   async onHouseNumberChange(): Promise<void> {
-    if (!this.houseNumber || this.houseNumber < 1 || this.houseNumber > 600) {
+    if (!this.houseNumber || this.houseNumber < 1 || this.houseNumber > 606) {
       this.houseResidents = [];
       return;
     }
@@ -100,7 +100,7 @@ export class PortariaEncomendasComponent implements OnInit, OnDestroy {
     if (
       !this.houseNumber ||
       this.houseNumber < 1 ||
-      this.houseNumber > 600 ||
+      this.houseNumber > 606 ||
       !this.recipientName.trim()
     ) {
       return;

@@ -104,7 +104,7 @@ export class AuthService {
     const hasValidHouse =
       this.userSnapshot.exists() &&
       Number(data?.['houseNumber']) >= 1 &&
-      Number(data?.['houseNumber']) <= 600;
+      Number(data?.['houseNumber']) <= 606;
 
     return {
       user: this.user,
@@ -133,8 +133,8 @@ export class AuthService {
     if (!user) throw new Error('Usuário não está autenticado no Google.');
 
     const houseNumber = Number(numeroCasa);
-    if (!Number.isInteger(houseNumber) || houseNumber < 1 || houseNumber > 600) {
-      throw new Error('Informe um número de casa válido entre 1 e 600.');
+    if (!Number.isInteger(houseNumber) || houseNumber < 1 || houseNumber > 606) {
+      throw new Error('Informe um número de casa válido entre 1 e 606.');
     }
 
     const cleanPhone = (telefone ?? this.phone ?? '').replace(/\D/g, '');

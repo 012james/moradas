@@ -134,7 +134,7 @@ export class InvoicesService {
     usersSnap.docs.forEach((d) => {
       const u = d.data() as UserProfile;
       const houseNum = Number(u['houseNumber']);
-      if (!houseNum || houseNum < 1 || houseNum > 600) return;
+      if (!houseNum || houseNum < 1 || houseNum > 606) return;
 
       if (!houseMap.has(houseNum)) {
         houseMap.set(houseNum, {
@@ -315,8 +315,8 @@ export class InvoicesService {
     });
   }
 
-  // Para Síndico / Secretaria: últimos 600 boletos emitidos
-  getAllInvoices$(maxItems = 600): Observable<InvoiceItem[]> {
+  // Para Síndico / Secretaria: últimos 606 boletos emitidos
+  getAllInvoices$(maxItems = 606): Observable<InvoiceItem[]> {
     return new Observable((observer) => {
       const q = query(
         collection(this.db, 'invoices'),
