@@ -8,13 +8,9 @@
 
     <span
       class="status-chip"
-      [class.closed]="ata.status === 'closed' || ata.status === 'encerrada'"
+      [class.closed]="!isPollOpen(ata)"
     >
-      {{
-        ata.status === 'closed' || ata.status === 'encerrada'
-          ? 'Votação Encerrada'
-          : 'Votação em Aberto'
-      }}
+      {{ isPollOpen(ata) ? 'Votação em Aberto' : 'Votação Encerrada' }}
     </span>
   </div>
 
@@ -113,9 +109,9 @@
   <!-- Urna Digital (Votação Aberta) -->
   <section
     class="voting-card"
-    *ngIf="ata.status !== 'closed' && ata.status !== 'encerrada'"
+    *ngIf="isPollOpen(ata)"
   >
-    <!-- ESTADO 1: Voto já escolhido (exibe apenas a opção votada + botão Mudar voto) -->
+    <!-- ESTADO 1: Voto já escolhido -->
     <ng-container *ngIf="currentVote && !isChangingVote">
       <div class="voting-head">
         <h2>Voto da sua unidade</h2>
@@ -261,22 +257,14 @@
   <!-- Resultado Final (Votação Encerrada) -->
   <section
     class="outcome-card"
-    *ngIf="ata.status === 'closed' || ata.status === 'encerrada'"
-    [class.rejected]="ata.outcome === 'reprovada' || ata.outcome === 'rejected'"
+    *ngIf="!isPollOpen(ata)"
+    [class.rejected]="isRejected"
   >
     <span translate="no" class="material-symbols-outlined notranslate">
-      {{
-        ata.outcome === 'reprovada' || ata.outcome === 'rejected'
-          ? 'cancel'
-          : 'task_alt'
-      }}
+      {{ isRejected ? 'cancel' : 'task_alt' }}
     </span>
     <h3>
-      {{
-        ata.outcome === 'reprovada' || ata.outcome === 'rejected'
-          ? 'Pauta Reprovada'
-          : 'Pauta Aprovada'
-      }}
+      {{ isRejected ? 'Pauta Reprovada' : 'Pauta Aprovada' }}
     </h3>
     <p>Assembleia encerrada. O resultado foi registrado oficialmente em ata.</p>
   </section>

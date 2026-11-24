@@ -27,6 +27,7 @@ export class AtaDetailComponent implements OnInit, OnDestroy {
   authService = inject(AuthService);
   private ataSub?: Subscription;
   private resultsSub?: Subscription;
+  private closeRequested = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -41,6 +42,12 @@ export class AtaDetailComponent implements OnInit, OnDestroy {
       this.ata = ata;
       if (!this.isChangingVote) {
         this.currentVote = this.normalizeVote(ata?.userVote);
+      }
+
+      // Se no Firebase ainda consta como 'open', mas o horário já passou, atualiza para 'closed'
+      if (ata?.id && ata.status === 'open' && !this.isPollOpen(ata) && !this.closeRequested) {
+        this.closeRequested = true;
+        this.atasService.closeExpiredAta(ata.id);
       }
     });
 
@@ -57,7 +64,17 @@ export class AtaDetailComponent implements OnInit, OnDestroy {
     this.resultsSub?.unsubscribe();
   }
 
+  get isRejected(): boolean {
+    if (!this.ata) return true;
+    if (this.ata.outcome === 'reprovada' || this.ata.outcome === 'rejected') return true;
+    if (this.ata.outcome === 'aprovada' || this.ata.outcome === 'approved') return false;
+
+    // Mesmo critério da tela inicial: só aprova se "A Favor" superar "Contra"
+    return this.favorCount <= this.contraCount;
+  }
+
   startChangeVote(): void {
+    if (!this.isPollOpen(this.ata)) return;
     this.isChangingVote = true;
   }
 
@@ -66,7 +83,7 @@ export class AtaDetailComponent implements OnInit, OnDestroy {
   }
 
   vote(option: 'favor' | 'contra' | 'abster'): void {
-    if (!this.ata?.id || this.isSubmitting) return;
+    if (!this.ata?.id || this.isSubmitting || !this.isPollOpen(this.ata)) return;
 
     // Se o morador abriu para mudar e clicou na mesma opção já registrada, apenas fecha o modo de edição
     if (this.currentVote === option && this.isChangingVote) {
@@ -86,7 +103,7 @@ export class AtaDetailComponent implements OnInit, OnDestroy {
         this.isChangingVote = false;
       } catch (error) {
         console.error('Erro ao votar:', error);
-        alert('Falha ao computar o voto. Verifique se sua unidade está aprovada.');
+        alert('Falha ao computar o voto. Verifique se a votação ainda está aberta ou se sua unidade está aprovada.');
       } finally {
         this.isSubmitting = false;
       }
@@ -108,5 +125,16 @@ export class AtaDetailComponent implements OnInit, OnDestroy {
     if (raw === 'favor' || raw === 'approved') return 'favor';
     if (raw === 'contra' || raw === 'rejected') return 'contra';
     return 'abster';
+  }
+
+  isPollOpen(poll: any): boolean {
+    if (!poll || poll.status !== 'open') return false;
+    if (!poll.expiresAt) return true;
+
+    const expiresMs = typeof poll.expiresAt.toDate === 'function'
+      ? poll.expiresAt.toDate().getTime()
+      : new Date(poll.expiresAt).getTime();
+
+    return Date.now() < expiresMs;
   }
 }

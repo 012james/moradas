@@ -266,4 +266,13 @@ export class AssemblyService {
     if (choice === 'rejected' || choice === 'contra') return 'rejected';
     return 'abstain';
   }
+
+  async closeExpiredAta(ataId: string): Promise<void> {
+    try {
+      const ataRef = doc(this.db, `SUA_COLECAO_AQUI/${ataId}`);
+      await updateDoc(ataRef, { status: 'closed' });
+    } catch {
+      // Ignora silenciosamente se já foi fechado por outro usuário
+    }
+  }
 }
