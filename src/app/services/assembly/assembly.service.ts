@@ -17,7 +17,6 @@ import { Observable } from 'rxjs';
 import { Ata } from '../../shared/models/ata.model';
 import { VoteChoice } from '../AssemblyVoting/AssemblyVoting.service';
 
-
 export interface VoteResultsSummary {
   approved: number;
   rejected: number;
@@ -33,10 +32,10 @@ export class AssemblyService {
   private db = getFirestore(this.app);
   private auth = getAuth(this.app);
   private ngZone = inject(NgZone);
+  private closingIds = new Set<string>();
 
-  // 1. Lista todas as assembleias em tempo real (usado na tela AtasListComponent)
+  // 1. Lista todas as assembleias em tempo real (usado na Home e AtasListComponent)
   getAssemblies$(): Observable<Ata[]> {
-
     return new Observable((observer) => {
       const colRef = collection(this.db, 'assemblies');
 
@@ -52,6 +51,15 @@ export class AssemblyService {
                 : data.date
                   ? new Date(data.date)
                   : null;
+
+            // Se ainda está como 'open' no banco mas o prazo já passou, fecha automaticamente
+            if (
+              data.status === 'open' &&
+              rawExpires instanceof Date &&
+              rawExpires.getTime() <= Date.now()
+            ) {
+              this.closeExpiredAta(docSnap.id);
+            }
 
             return {
               id: docSnap.id,
@@ -69,7 +77,6 @@ export class AssemblyService {
 
       return () => unsub();
     });
-
   }
 
   // 2. Carrega os detalhes da pauta e identifica se a casa do usuário já votou
@@ -86,6 +93,18 @@ export class AssemblyService {
           }
 
           const data = docSnap.data();
+          const rawExpires = data['expiresAt'];
+          const expiresMs =
+            typeof rawExpires?.toDate === 'function'
+              ? rawExpires.toDate().getTime()
+              : rawExpires
+                ? new Date(rawExpires).getTime()
+                : null;
+
+          if (data['status'] === 'open' && expiresMs !== null && expiresMs <= Date.now()) {
+            this.closeExpiredAta(docSnap.id);
+          }
+
           let userVote: VoteChoice | null = null;
 
           // Verifica o voto registrado pela unidade (casa) do usuário logado
@@ -179,8 +198,8 @@ export class AssemblyService {
         typeof rawExpires?.toDate === 'function'
           ? rawExpires.toDate().getTime()
           : rawExpires
-          ? new Date(rawExpires).getTime()
-          : Date.now() + 86400000;
+            ? new Date(rawExpires).getTime()
+            : Date.now() + 86400000;
 
       if (ataData['status'] === 'closed' || expiresMs <= Date.now()) {
         throw new Error('O prazo desta votação já foi encerrado.');
@@ -261,18 +280,22 @@ export class AssemblyService {
     await deleteDoc(doc(this.db, 'assemblies', ataId));
   }
 
+  async closeExpiredAta(ataId: string): Promise<void> {
+    if (this.closingIds.has(ataId)) return;
+    this.closingIds.add(ataId);
+
+    try {
+      const ataRef = doc(this.db, 'assemblies', ataId);
+      await updateDoc(ataRef, { status: 'closed' });
+    } catch (error) {
+      this.closingIds.delete(ataId);
+      console.warn('Não foi possível encerrar a assembleia vencida no Firestore:', error);
+    }
+  }
+
   private normalizeChoice(choice: string): 'approved' | 'rejected' | 'abstain' {
     if (choice === 'approved' || choice === 'favor') return 'approved';
     if (choice === 'rejected' || choice === 'contra') return 'rejected';
     return 'abstain';
-  }
-
-  async closeExpiredAta(ataId: string): Promise<void> {
-    try {
-      const ataRef = doc(this.db, `SUA_COLECAO_AQUI/${ataId}`);
-      await updateDoc(ataRef, { status: 'closed' });
-    } catch {
-      // Ignora silenciosamente se já foi fechado por outro usuário
-    }
   }
 }
