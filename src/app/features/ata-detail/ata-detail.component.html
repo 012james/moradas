@@ -268,4 +268,98 @@
     </h3>
     <p>Assembleia encerrada. O resultado foi registrado oficialmente em ata.</p>
   </section>
+
+  <!-- Relatório de Auditoria de Votos (Exclusivo Síndico / Admin) -->
+  <section class="audit-report-card" *ngIf="canViewReport">
+    <div class="report-header">
+      <div>
+        <span class="report-eyebrow">Área do Síndico</span>
+        <h3>Relatório nominal de votos</h3>
+      </div>
+
+      <button
+        type="button"
+        class="btn-export-csv"
+        [disabled]="auditVotes.length === 0"
+        (click)="exportVotesCsv()"
+      >
+        <span translate="no" class="material-symbols-outlined notranslate">download</span>
+        Exportar CSV
+      </button>
+    </div>
+
+    <!-- Filtros por Opção -->
+    <div class="report-filters">
+      <button
+        type="button"
+        class="filter-pill"
+        [class.active]="reportFilter === 'all'"
+        (click)="reportFilter = 'all'"
+      >
+        Todos ({{ auditVotes.length }})
+      </button>
+      <button
+        type="button"
+        class="filter-pill favor"
+        [class.active]="reportFilter === 'favor'"
+        (click)="reportFilter = 'favor'"
+      >
+        A Favor ({{ favorCount }})
+      </button>
+      <button
+        type="button"
+        class="filter-pill contra"
+        [class.active]="reportFilter === 'contra'"
+        (click)="reportFilter = 'contra'"
+      >
+        Contra ({{ contraCount }})
+      </button>
+      <button
+        type="button"
+        class="filter-pill abster"
+        [class.active]="reportFilter === 'abster'"
+        (click)="reportFilter = 'abster'"
+      >
+        Abstenção ({{ absterCount }})
+      </button>
+    </div>
+
+    <!-- Busca por Casa ou Nome -->
+    <div class="report-search" *ngIf="auditVotes.length > 0">
+      <span translate="no" class="material-symbols-outlined notranslate">search</span>
+      <input
+        type="text"
+        [(ngModel)]="reportSearch"
+        placeholder="Filtrar por nº da casa ou morador..."
+      />
+    </div>
+
+    <!-- Lista de Unidades Votantes -->
+    <div class="report-list" *ngIf="filteredAuditVotes.length > 0; else emptyReport">
+      <div class="report-row" *ngFor="let item of filteredAuditVotes">
+        <div class="unit-badge">Casa {{ item.houseNumber }}</div>
+
+        <div class="voter-info">
+          <strong>{{ item.voterName }}</strong>
+          <span *ngIf="item.votedAt">
+            {{ item.votedAt | date: 'dd/MM/yyyy, HH:mm' }}
+          </span>
+        </div>
+
+        <span class="choice-pill" [ngClass]="item.choice">
+          {{ getChoiceLabel(item.choice) }}
+        </span>
+      </div>
+    </div>
+
+    <ng-template #emptyReport>
+      <p class="report-empty">
+        {{
+          auditVotes.length === 0
+            ? 'Nenhum voto registrado nesta pauta até o momento.'
+            : 'Nenhum voto encontrado para o filtro selecionado.'
+        }}
+      </p>
+    </ng-template>
+  </section>
 </div>

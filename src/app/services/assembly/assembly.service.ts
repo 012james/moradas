@@ -14,7 +14,7 @@ import {
   Timestamp
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
-import { Ata } from '../../shared/models/ata.model';
+import { Ata, VoteAuditItem } from '../../shared/models/ata.model';
 import { VoteChoice } from '../AssemblyVoting/AssemblyVoting.service';
 
 export interface VoteResultsSummary {
@@ -297,5 +297,48 @@ export class AssemblyService {
     if (choice === 'approved' || choice === 'favor') return 'approved';
     if (choice === 'rejected' || choice === 'contra') return 'rejected';
     return 'abstain';
+  }
+
+  // 6. Relatório detalhado de votos por unidade (apenas Síndico / Admin)
+  getVotesAudit$(ataId: string): Observable<VoteAuditItem[]> {
+    return new Observable<VoteAuditItem[]>((observer) => {
+      const votesRef = collection(this.db, 'assemblies', ataId, 'votes');
+
+      const unsub = onSnapshot(
+        votesRef,
+        (snapshot) => {
+          const list: VoteAuditItem[] = snapshot.docs.map((docSnap) => {
+            const data = docSnap.data() as any;
+            const normalized = this.normalizeChoice(data.choice || '');
+            const choice: 'favor' | 'contra' | 'abster' =
+              normalized === 'approved'
+                ? 'favor'
+                : normalized === 'rejected'
+                  ? 'contra'
+                  : 'abster';
+
+            const rawDate = data.votedAt?.toDate
+              ? data.votedAt.toDate()
+              : data.votedAt
+                ? new Date(data.votedAt)
+                : null;
+
+            return {
+              houseNumber: Number(data.houseNumber ?? docSnap.id),
+              voterName: data.voterName || `Casa ${docSnap.id}`,
+              voterUid: data.voterUid || '',
+              choice,
+              votedAt: rawDate
+            };
+          });
+
+          list.sort((a, b) => a.houseNumber - b.houseNumber);
+          this.ngZone.run(() => observer.next(list));
+        },
+        (error) => this.ngZone.run(() => observer.error(error))
+      );
+
+      return () => unsub();
+    });
   }
 }

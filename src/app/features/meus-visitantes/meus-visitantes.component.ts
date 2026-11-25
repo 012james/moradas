@@ -6,11 +6,13 @@ import { UserProfile } from '../../shared/models/user.model';
 import { AuthService } from '../../services/auth/auth.service';
 import { VisitorsService } from '../../services/visitors/visitors.service';
 import { VisitorAuthorization, VisitorAccessType, VisitorCategory } from '../../shared/models/visitor.model';
+import { HasRoleDirective } from '../../shared/directives/has-role.directive';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-meus-visitantes',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HasRoleDirective, RouterLink],
   templateUrl: './meus-visitantes.component.html',
   styleUrls: ['./meus-visitantes.component.scss']
 })

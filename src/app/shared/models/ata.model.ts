@@ -26,3 +26,11 @@ export interface Ata {
   createdByUid?: string;
   createdByName?: string;
 }
+
+export interface VoteAuditItem {
+  houseNumber: number;
+  voterName: string;
+  voterUid: string;
+  choice: 'favor' | 'contra' | 'abster';
+  votedAt: Date | null;
+}

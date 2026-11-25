@@ -16,6 +16,16 @@
     <p>Aguarde a aprovação da sua unidade pelo síndico para liberar visitantes na portaria.</p>
   </div>
 
+ <!-- Botão de acesso ao controle da portaria (Exclusivo da portaria) -->
+   <a *appHasRole="['porteiro', 'sindico']" routerLink="/admin/visitantes" class="btn-portaria-desk">
+    <span translate="no" class="material-symbols-outlined notranslate">badge</span>
+    <div>
+      <strong>Controle de acesso Portaria</strong>
+      <span>Liberar acesso portaria</span>
+    </div>
+    <span translate="no" class="material-symbols-outlined notranslate">chevron_right</span>
+  </a>
+
   <ng-container *ngIf="authService.canVote$ | async">
     <!-- Abas: Liberar no Dia vs Lista Permanente -->
     <div class="segmented-tabs">
