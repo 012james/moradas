@@ -176,9 +176,9 @@
          ===================================================== -->
     <div class="card-controls approved-footer" *ngIf="activeTab === 'approved'">
       <span class="role-label">Cargo atual:</span>
-
+    
       <div class="role-pills compact">
-        <button
+             <button
           type="button"
           [class.selected]="user.role === 'morador'"
           [disabled]="processingId === user.id"
@@ -212,6 +212,14 @@
           (click)="updateActiveUserRole(user, 'sindico')"
         >
           Síndico
+        </button>
+      </div>
+    
+      <!-- Exclusão do cadastro -->
+      <div class="delete-row" *ngIf="user.id !== currentUserId">
+        <button type="button" class="btn-delete-user" [disabled]="processingId === user.id" (click)="deleteUser(user)">
+          <span translate="no" class="material-symbols-outlined notranslate">delete</span>
+          {{ processingId === user.id ? 'Excluindo...' : 'Excluir cadastro' }}
         </button>
       </div>
     </div>

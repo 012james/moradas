@@ -323,3 +323,45 @@
     font-size: 0.82rem;
   }
 }
+
+.approved-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+
+  .delete-row {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 0.55rem;
+    margin-top: 0.15rem;
+    border-top: 1px dashed #e2e8f0;
+  }
+
+  .btn-delete-user {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.38rem 0.7rem;
+    border-radius: 10px;
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    color: #dc2626;
+    font-size: 0.74rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    .material-symbols-outlined {
+      font-size: 1rem;
+    }
+
+    &:hover:not(:disabled) {
+      background: #fee2e2;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}

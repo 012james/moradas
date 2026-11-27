@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { FirebaseApp } from '@angular/fire/app';
+import { getAuth } from 'firebase/auth';
 import {
   getFirestore,
   collection,
@@ -21,7 +22,9 @@ import { UserProfile } from '../../shared/models/user.model';
   styleUrls: ['./sindico-approval.component.scss']
 })
 export class SindicoApprovalComponent implements OnInit, OnDestroy {
-  private db = getFirestore(inject(FirebaseApp));
+  private app = inject(FirebaseApp);
+  private db = getFirestore(this.app);
+  private auth = getAuth(this.app);
   private ngZone = inject(NgZone);
   private unsub?: () => void;
 
@@ -33,6 +36,10 @@ export class SindicoApprovalComponent implements OnInit, OnDestroy {
   selectedRoles: Record<string, UserProfile['role']> = {};
   processingId: string | null = null;
   feedbackToast = '';
+
+  get currentUserId(): string | null {
+    return this.auth.currentUser?.uid || null;
+  }
 
   ngOnInit(): void {
     const usersRef = collection(this.db, 'users');
@@ -133,6 +140,36 @@ export class SindicoApprovalComponent implements OnInit, OnDestroy {
       await updateDoc(userRef, { role: newRole });
       this.selectedRoles[user.id] = newRole;
       this.showToast(`Perfil de ${user.name} alterado para ${newRole.toUpperCase()}.`);
+    } finally {
+      this.ngZone.run(() => {
+        this.processingId = null;
+      });
+    }
+  }
+
+  async deleteUser(user: UserProfile): Promise<void> {
+    if (!user?.id || this.processingId) return;
+
+    if (user.id === this.currentUserId) {
+      this.showToast('Você não pode excluir o seu próprio cadastro.');
+      return;
+    }
+
+    const label = `${user.name || 'este morador'} (Casa ${user.houseNumber || '--'})`;
+    const confirmed = confirm(
+      `Tem certeza que deseja excluir permanentemente o cadastro de ${label}?\n\nO acesso ao aplicativo será revogado imediatamente.`
+    );
+
+    if (!confirmed) return;
+
+    this.processingId = user.id;
+    try {
+      await deleteDoc(doc(this.db, 'users', user.id));
+      delete this.selectedRoles[user.id];
+      this.showToast(`Cadastro de ${user.name} excluído com sucesso.`);
+    } catch (error) {
+      console.error('Erro ao excluir morador:', error);
+      this.showToast('Não foi possível excluir o cadastro. Verifique suas permissões.');
     } finally {
       this.ngZone.run(() => {
         this.processingId = null;
