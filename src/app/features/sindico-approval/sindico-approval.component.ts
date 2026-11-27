@@ -8,6 +8,10 @@ import {
   getFirestore,
   collection,
   doc,
+  query,
+  where,
+  getDocs,
+  getCountFromServer,
   updateDoc,
   deleteDoc,
   onSnapshot
@@ -26,13 +30,18 @@ export class SindicoApprovalComponent implements OnInit, OnDestroy {
   private db = getFirestore(this.app);
   private auth = getAuth(this.app);
   private ngZone = inject(NgZone);
-  private unsub?: () => void;
+  private unsubPending?: () => void;
 
-  allUsers: UserProfile[] = [];
+  pendingUsers: UserProfile[] = [];
+  approvedUsers: UserProfile[] = [];
+
   activeTab: 'pending' | 'approved' = 'pending';
   searchTerm = '';
 
-  // Guarda o papel escolhido temporariamente no card antes de aprovar
+  approvedLoaded = false;
+  isLoadingApproved = false;
+  approvedTotalCount = 0;
+
   selectedRoles: Record<string, UserProfile['role']> = {};
   processingId: string | null = null;
   feedbackToast = '';
@@ -44,55 +53,98 @@ export class SindicoApprovalComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     const usersRef = collection(this.db, 'users');
 
-    this.unsub = onSnapshot(usersRef, (snapshot) => {
-      const list = snapshot.docs.map((docSnap) => {
-        const data = docSnap.data();
-        const user = {
-          id: docSnap.id,
-          ...data,
-          role: data['role'] || 'morador'
-        } as unknown as UserProfile;
-
-        if (!this.selectedRoles[user.id]) {
-          this.selectedRoles[user.id] = user.role;
-        }
-        return user;
-      });
-
-      // Ordena por número da casa para facilitar conferência
-      list.sort((a, b) => (Number(a.houseNumber) || 999) - (Number(b.houseNumber) || 999));
+    // 1. Escuta em tempo real APENAS os cadastros pendentes
+    const pendingQuery = query(usersRef, where('status', '==', 'pending'));
+    this.unsubPending = onSnapshot(pendingQuery, (snapshot) => {
+      const list = snapshot.docs.map((docSnap) => this.mapUserDoc(docSnap.id, docSnap.data()));
+      this.sortByHouse(list);
 
       this.ngZone.run(() => {
-        this.allUsers = list;
+        this.pendingUsers = list;
       });
     });
+
+    // 2. Busca apenas a contagem dos aprovados (custa 1 leitura, sem baixar os documentos)
+    this.loadApprovedCount();
   }
 
   ngOnDestroy(): void {
-    if (this.unsub) this.unsub();
+    if (this.unsubPending) this.unsubPending();
+  }
+
+  private async loadApprovedCount(): Promise<void> {
+    try {
+      const approvedQuery = query(
+        collection(this.db, 'users'),
+        where('status', '==', 'approved')
+      );
+      const countSnap = await getCountFromServer(approvedQuery);
+      this.ngZone.run(() => {
+        this.approvedTotalCount = countSnap.data().count;
+      });
+    } catch (error) {
+      console.error('Erro ao contar moradores aprovados:', error);
+    }
+  }
+
+  // Chamado ao clicar nas abas no HTML
+  async setTab(tab: 'pending' | 'approved'): Promise<void> {
+    this.activeTab = tab;
+
+    if (tab === 'approved' && !this.approvedLoaded) {
+      await this.loadApprovedUsers();
+    }
+  }
+
+  async loadApprovedUsers(forceReload = false): Promise<void> {
+    if (this.isLoadingApproved || (this.approvedLoaded && !forceReload)) return;
+
+    this.isLoadingApproved = true;
+    try {
+      const approvedQuery = query(
+        collection(this.db, 'users'),
+        where('status', '==', 'approved')
+      );
+      const snapshot = await getDocs(approvedQuery);
+      const list = snapshot.docs.map((docSnap) => this.mapUserDoc(docSnap.id, docSnap.data()));
+      this.sortByHouse(list);
+
+      this.ngZone.run(() => {
+        this.approvedUsers = list;
+        this.approvedTotalCount = list.length;
+        this.approvedLoaded = true;
+      });
+    } catch (error) {
+      console.error('Erro ao carregar moradores aprovados:', error);
+      this.showToast('Erro ao carregar a lista de moradores aprovados.');
+    } finally {
+      this.ngZone.run(() => {
+        this.isLoadingApproved = false;
+      });
+    }
   }
 
   get pendingCount(): number {
-    return this.allUsers.filter((u) => u.status === 'pending').length;
+    return this.pendingUsers.length;
   }
 
   get approvedCount(): number {
-    return this.allUsers.filter((u) => u.status === 'approved').length;
+    return this.approvedLoaded ? this.approvedUsers.length : this.approvedTotalCount;
   }
 
   get filteredUsers(): UserProfile[] {
+    const sourceList = this.activeTab === 'pending' ? this.pendingUsers : this.approvedUsers;
     const term = this.searchTerm.trim().toLowerCase();
 
-    return this.allUsers
-      .filter((u) => u.status === this.activeTab)
-      .filter((u) => {
-        if (!term) return true;
-        const matchName = u.name?.toLowerCase().includes(term);
-        const matchEmail = u.email?.toLowerCase().includes(term);
-        const matchStreet = u.street?.toLowerCase().includes(term);
-        const matchHouse = String(u.houseNumber || '').includes(term);
-        return matchName || matchEmail || matchStreet || matchHouse;
-      });
+    if (!term) return sourceList;
+
+    return sourceList.filter((u) => {
+      const matchName = u.name?.toLowerCase().includes(term);
+      const matchEmail = u.email?.toLowerCase().includes(term);
+      const matchStreet = u.street?.toLowerCase().includes(term);
+      const matchHouse = String(u.houseNumber || '').includes(term);
+      return matchName || matchEmail || matchStreet || matchHouse;
+    });
   }
 
   selectRoleForUser(userId: string, role: UserProfile['role']): void {
@@ -106,7 +158,6 @@ export class SindicoApprovalComponent implements OnInit, OnDestroy {
     try {
       const userRef = doc(this.db, 'users', user.id);
 
-      // Se recusado, exclui o cadastro para permitir que o morador preencha novamente
       if (status === 'rejected') {
         await deleteDoc(userRef);
         delete this.selectedRoles[user.id];
@@ -118,6 +169,18 @@ export class SindicoApprovalComponent implements OnInit, OnDestroy {
       await updateDoc(userRef, {
         status: 'approved',
         role: assignedRole
+      });
+
+      // Atualiza a lista ou o contador local sem precisar consultar o Firebase novamente
+      this.ngZone.run(() => {
+        if (this.approvedLoaded) {
+          const updatedUser: UserProfile = { ...user, status: 'approved', role: assignedRole };
+          this.approvedUsers = [...this.approvedUsers, updatedUser];
+          this.sortByHouse(this.approvedUsers);
+          this.approvedTotalCount = this.approvedUsers.length;
+        } else {
+          this.approvedTotalCount += 1;
+        }
       });
 
       this.showToast(`${user.name} aprovado como ${assignedRole.toUpperCase()}!`);
@@ -138,7 +201,12 @@ export class SindicoApprovalComponent implements OnInit, OnDestroy {
     try {
       const userRef = doc(this.db, 'users', user.id);
       await updateDoc(userRef, { role: newRole });
-      this.selectedRoles[user.id] = newRole;
+
+      this.ngZone.run(() => {
+        user.role = newRole;
+        this.selectedRoles[user.id] = newRole;
+      });
+
       this.showToast(`Perfil de ${user.name} alterado para ${newRole.toUpperCase()}.`);
     } finally {
       this.ngZone.run(() => {
@@ -166,6 +234,17 @@ export class SindicoApprovalComponent implements OnInit, OnDestroy {
     try {
       await deleteDoc(doc(this.db, 'users', user.id));
       delete this.selectedRoles[user.id];
+
+      // Remove localmente da aba de aprovados sem precisar refazer getDocs
+      this.ngZone.run(() => {
+        if (this.approvedLoaded) {
+          this.approvedUsers = this.approvedUsers.filter((u) => u.id !== user.id);
+          this.approvedTotalCount = this.approvedUsers.length;
+        } else {
+          this.approvedTotalCount = Math.max(0, this.approvedTotalCount - 1);
+        }
+      });
+
       this.showToast(`Cadastro de ${user.name} excluído com sucesso.`);
     } catch (error) {
       console.error('Erro ao excluir morador:', error);
@@ -182,6 +261,23 @@ export class SindicoApprovalComponent implements OnInit, OnDestroy {
     const parts = name.trim().split(' ').filter(Boolean);
     if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
+  private mapUserDoc(id: string, data: Record<string, any>): UserProfile {
+    const user = {
+      id,
+      ...data,
+      role: data['role'] || 'morador'
+    } as unknown as UserProfile;
+
+    if (!this.selectedRoles[user.id]) {
+      this.selectedRoles[user.id] = user.role;
+    }
+    return user;
+  }
+
+  private sortByHouse(list: UserProfile[]): void {
+    list.sort((a, b) => (Number(a.houseNumber) || 999) - (Number(b.houseNumber) || 999));
   }
 
   private showToast(msg: string): void {

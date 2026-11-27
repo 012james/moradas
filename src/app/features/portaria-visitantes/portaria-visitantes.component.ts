@@ -34,8 +34,10 @@ export class PortariaVisitantesComponent implements OnInit, OnDestroy {
   houseFilter: number | null = null;
   searchTerm = '';
   filterMode: 'todos_hoje' | 'unico' | 'permanente' | 'historico' = 'todos_hoje';
-  historyDatePreset: 'todos' | 'hoje' | 'ontem' | 'data' = 'todos';
+  historyDatePreset: 'todos' | 'hoje' | 'ontem' | 'data' = 'hoje';
   customHistoryDate = '';
+  isLoadingLogs = false;
+  private logsSub?: Subscription;
 
   processingId: string | null = null;
   toastMsg = '';
@@ -51,6 +53,7 @@ export class PortariaVisitantesComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Na abertura, escuta APENAS as autorizações ativas (não baixa o histórico ainda)
     this.subs.add(
       this.visitorsService.getGatehouseVisitors$().subscribe((list) => {
         this.ngZone.run(() => {
@@ -59,19 +62,11 @@ export class PortariaVisitantesComponent implements OnInit, OnDestroy {
         });
       })
     );
-
-    this.subs.add(
-      this.visitorsService.getVisitorLogs$(300).subscribe((logs) => {
-        this.ngZone.run(() => {
-          this.allLogs = logs;
-          this.cdr.detectChanges();
-        });
-      })
-    );
   }
 
   ngOnDestroy(): void {
     this.subs.unsubscribe();
+    this.logsSub?.unsubscribe();
   }
 
   get validTodayCount(): number {
@@ -170,14 +165,74 @@ export class PortariaVisitantesComponent implements OnInit, OnDestroy {
       });
   }
 
+  // Use este método ao clicar nas abas principais no HTML
+  setFilterMode(mode: 'todos_hoje' | 'unico' | 'permanente' | 'historico'): void {
+    this.filterMode = mode;
+
+    if (mode === 'historico' && !this.logsSub) {
+      this.subscribeToLogs();
+    }
+  }
+
   selectDatePreset(preset: 'todos' | 'hoje' | 'ontem'): void {
     this.historyDatePreset = preset;
     this.customHistoryDate = '';
+    if (this.filterMode === 'historico') {
+      this.subscribeToLogs();
+    }
   }
 
   onCustomDateChange(value: string): void {
     this.customHistoryDate = value;
     this.historyDatePreset = value ? 'data' : 'todos';
+    if (this.filterMode === 'historico') {
+      this.subscribeToLogs();
+    }
+  }
+
+  private subscribeToLogs(): void {
+    this.logsSub?.unsubscribe();
+    this.isLoadingLogs = true;
+
+    const { startMs, endMs, maxLimit } = this.getHistoryQueryBounds();
+
+    this.logsSub = this.visitorsService
+      .getVisitorLogsByRange$(startMs, endMs, maxLimit)
+      .subscribe((logs) => {
+        this.ngZone.run(() => {
+          this.allLogs = logs;
+          this.isLoadingLogs = false;
+          this.cdr.detectChanges();
+        });
+      });
+  }
+
+  private getHistoryQueryBounds(): { startMs?: number; endMs?: number; maxLimit: number } {
+    if (this.historyDatePreset === 'hoje') {
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
+      return { startMs: start.getTime(), maxLimit: 300 };
+    }
+
+    if (this.historyDatePreset === 'ontem') {
+      const start = new Date();
+      start.setDate(start.getDate() - 1);
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date(start);
+      end.setHours(23, 59, 59, 999);
+      return { startMs: start.getTime(), endMs: end.getTime(), maxLimit: 300 };
+    }
+
+    if (this.historyDatePreset === 'data' && this.customHistoryDate) {
+      const [y, m, d] = this.customHistoryDate.split('-').map(Number);
+      const start = new Date(y, m - 1, d, 0, 0, 0, 0);
+      const end = new Date(y, m - 1, d, 23, 59, 59, 999);
+      return { startMs: start.getTime(), endMs: end.getTime(), maxLimit: 300 };
+    }
+
+    // Só busca os últimos 300 quando o porteiro clicar explicitamente em "Todos"
+    return { maxLimit: 300 };
   }
 
   async confirmEntry(visitor: VisitorAuthorization): Promise<void> {

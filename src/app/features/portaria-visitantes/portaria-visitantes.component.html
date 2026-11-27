@@ -60,28 +60,28 @@
     <button
       type="button"
       [class.active]="filterMode === 'todos_hoje'"
-      (click)="filterMode = 'todos_hoje'"
+      (click)="setFilterMode('todos_hoje')"
     >
       Válidos Hoje ({{ validTodayCount }})
     </button>
     <button
       type="button"
       [class.active]="filterMode === 'unico'"
-      (click)="filterMode = 'unico'"
+      (click)="setFilterMode('unico')"
     >
       Avulsos do Dia ({{ singleTodayCount }})
     </button>
     <button
       type="button"
       [class.active]="filterMode === 'permanente'"
-      (click)="filterMode = 'permanente'"
+      (click)="setFilterMode('permanente')"
     >
       Lista Permanente ({{ permanentCount }})
     </button>
     <button
       type="button"
       [class.active]="filterMode === 'historico'"
-      (click)="filterMode = 'historico'"
+      (click)="setFilterMode('historico')"
     >
       Histórico Geral ({{ allLogs.length }})
     </button>

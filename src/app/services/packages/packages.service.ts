@@ -161,4 +161,60 @@ export class PackagesService {
       validationMethod: 'manual'
     });
   }
+
+  // 1. Apenas encomendas aguardando retirada (tempo real, sem limite)
+getPendingPackagesByHouse$(houseNumber: number | string): Observable<PackageItem[]> {
+  return new Observable((observer) => {
+    const q = query(
+      collection(this.db, 'packages'),
+      where('houseNumber', '==', houseNumber),
+      where('status', '==', 'aguardando')
+    );
+
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as PackageItem[];
+        list.sort((a: any, b: any) => (b.createdAt || 0) - (a.createdAt || 0));
+        observer.next(list);
+      },
+      (err) => {
+        console.error('Erro ao buscar encomendas pendentes:', err);
+        observer.next([]);
+      }
+    );
+
+    return () => unsub();
+  });
+}
+
+// 2. Apenas as últimas 15 encomendas já entregues
+getDeliveredPackagesByHouse$(
+  houseNumber: number | string,
+  maxLimit = 15
+): Observable<PackageItem[]> {
+  return new Observable((observer) => {
+    const q = query(
+      collection(this.db, 'packages'),
+      where('houseNumber', '==', houseNumber),
+      where('status', '==', 'entregue'),
+      orderBy('createdAt', 'desc'),
+      limit(maxLimit)
+    );
+
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as PackageItem[];
+        observer.next(list);
+      },
+      (err) => {
+        console.error('Erro ao buscar histórico de encomendas:', err);
+        observer.next([]);
+      }
+    );
+
+    return () => unsub();
+  });
+}
 }

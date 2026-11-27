@@ -25,6 +25,7 @@ import { UserProfile } from '../../shared/models/user.model';
 export class VisitorsService {
   private db = getFirestore(inject(FirebaseApp));
   private ngZone = inject(NgZone);
+  private deactivatingIds = new Set<string>();
 
   async authorizeVisitor(
     data: {
@@ -154,17 +155,47 @@ export class VisitorsService {
     await deleteDoc(doc(this.db, 'visitors', visitorId));
   }
 
-  getGatehouseVisitors$(): Observable<VisitorAuthorization[]> {
+ getGatehouseVisitors$(): Observable<VisitorAuthorization[]> {
   return new Observable((observer) => {
-    const colRef = collection(this.db, 'visitors');
+    const q = query(
+      collection(this.db, 'visitors'),
+      where('active', '==', true)
+    );
 
     const unsub = onSnapshot(
-      colRef,
+      q,
       (snap) => {
-        const list = snap.docs.map((d) => ({
-          id: d.id,
-          ...d.data()
-        })) as VisitorAuthorization[];
+        const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+        const list = snap.docs.map((d) => {
+          const data = d.data() as any;
+
+          // Se for passe único de data anterior e nunca entrou, marca como inativo no banco
+          if (data.accessType === 'unico' && data.validDate) {
+            const rawDate = typeof data.validDate?.toDate === 'function'
+              ? data.validDate.toDate()
+              : data.validDate instanceof Date
+                ? data.validDate
+                : null;
+
+            const validDateStr = rawDate
+              ? `${rawDate.getFullYear()}-${String(rawDate.getMonth() + 1).padStart(2, '0')}-${String(rawDate.getDate()).padStart(2, '0')}`
+              : String(data.validDate).trim().slice(0, 10);
+
+            if (validDateStr && validDateStr < todayStr && !this.deactivatingIds.has(d.id)) {
+              this.deactivatingIds.add(d.id);
+              updateDoc(doc(this.db, 'visitors', d.id), { active: false }).catch(() => {
+                this.deactivatingIds.delete(d.id);
+              });
+            }
+          }
+
+          return {
+            id: d.id,
+            ...data
+          } as VisitorAuthorization;
+        });
 
         list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         observer.next(list);
@@ -201,6 +232,41 @@ getVisitorLogs$(maxItems = 300): Observable<VisitorLog[]> {
           console.error('Erro ao carregar histórico de acessos:', err);
           observer.next([]);
         }
+      );
+
+      return () => unsub();
+    });
+  }
+
+  getVisitorLogsByRange$(
+    startMs?: number,
+    endMs?: number,
+    maxLimit = 300
+  ): Observable<VisitorLog[]> {
+    return new Observable<VisitorLog[]>((observer) => {
+      const logsRef = collection(this.db, 'visitor_logs'); // mantenha o nome exato da sua coleção
+      const constraints: any[] = [];
+
+      if (startMs !== undefined) {
+        constraints.push(where('enteredAt', '>=', startMs));
+      }
+      if (endMs !== undefined) {
+        constraints.push(where('enteredAt', '<=', endMs));
+      }
+
+      constraints.push(orderBy('enteredAt', 'desc'), limit(maxLimit));
+
+      const q = query(logsRef, ...constraints);
+      const unsub = onSnapshot(
+        q,
+        (snapshot) => {
+          const logs = snapshot.docs.map((d) => ({
+            id: d.id,
+            ...d.data()
+          })) as VisitorLog[];
+          observer.next(logs);
+        },
+        (err) => observer.error(err)
       );
 
       return () => unsub();

@@ -22,21 +22,24 @@
 
   <!-- Abas: Pendentes vs Aprovados -->
   <div class="segmented-tabs">
-    <button
-      type="button"
-      [class.active]="activeTab === 'pending'"
-      (click)="activeTab = 'pending'"
-    >
+    <button 
+    type="button" 
+    [class.active]="activeTab === 'pending'" 
+    (click)="setTab('pending')">
       Pendentes ({{ pendingCount }})
     </button>
 
-    <button
-      type="button"
-      [class.active]="activeTab === 'approved'"
-      (click)="activeTab = 'approved'"
-    >
+    <button 
+    type="button" 
+    [class.active]="activeTab === 'approved'" 
+    (click)="setTab('approved')">
       Aprovados ({{ approvedCount }})
     </button>
+  </div>
+
+  <!-- Aviso opcional enquanto baixa os aprovados no primeiro clique -->
+  <div class="loading-box" *ngIf="activeTab === 'approved' && isLoadingApproved">
+    Carregando moradores aprovados...
   </div>
 
   <!-- Busca Rápida -->
