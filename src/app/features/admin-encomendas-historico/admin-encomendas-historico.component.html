@@ -1,0 +1,127 @@
+<div class="history-page">
+  <header class="page-header">
+    <div>
+      <a routerLink="/admin" class="back-link">
+        <span translate="no" class="material-symbols-outlined notranslate">arrow_back_ios_new</span>
+        Central de Gestão
+      </a>
+      <h1>Histórico de Encomendas</h1>
+    </div>
+
+    <button
+      type="button"
+      class="btn-csv"
+      [disabled]="filteredPackages.length === 0"
+      (click)="exportCsv()"
+    >
+      <span translate="no" class="material-symbols-outlined notranslate">download</span>
+      CSV
+    </button>
+  </header>
+
+  <!-- Filtros de Período -->
+  <div class="preset-pills">
+    <button
+      type="button"
+      [class.active]="datePreset === 'hoje'"
+      (click)="selectPreset('hoje')"
+    >
+      Hoje
+    </button>
+    <button
+      type="button"
+      [class.active]="datePreset === '7dias'"
+      (click)="selectPreset('7dias')"
+    >
+      Últimos 7 dias
+    </button>
+    <button
+      type="button"
+      [class.active]="datePreset === 'ultimas100'"
+      (click)="selectPreset('ultimas100')"
+    >
+      Últimas 100
+    </button>
+  </div>
+
+  <!-- Busca + Data Específica -->
+  <div class="filters-row">
+    <div class="search-box">
+      <span translate="no" class="material-symbols-outlined notranslate">search</span>
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        placeholder="Casa, morador, loja ou porteiro..."
+      />
+    </div>
+
+    <input
+      type="date"
+      class="date-picker"
+      [ngModel]="customDate"
+      (ngModelChange)="onCustomDateChange($event)"
+      title="Filtrar por data específica"
+    />
+  </div>
+
+  <div class="results-meta" *ngIf="!isLoading">
+    <span>{{ filteredPackages.length }} encomenda(s) entregue(s)</span>
+  </div>
+
+  <!-- Estado de Carregamento -->
+  <div class="empty-state" *ngIf="isLoading">
+    <p>Carregando histórico de entregas...</p>
+  </div>
+
+  <!-- Lista de Encomendas Entregues -->
+  <div class="packages-list" *ngIf="!isLoading && filteredPackages.length > 0">
+    <article class="pkg-card" *ngFor="let p of filteredPackages">
+      <div class="card-top">
+        <span class="house-badge">Casa {{ p.houseNumber }}</span>
+        <span class="status-badge">
+          <span translate="no" class="material-symbols-outlined notranslate">check_circle</span>
+          Entregue
+        </span>
+      </div>
+
+      <h3>{{ p.recipientName || 'Morador da unidade' }}</h3>
+
+      <p class="pkg-desc" *ngIf="p.carrier || p.storageLocation">
+        {{ p.carrier }}
+        <span *ngIf="p.storageLocation"> • Local: {{ p.storageLocation }}</span>
+      </p>
+
+      <div class="timeline-box">
+        <div class="time-row" *ngIf="toDateObj(p.receivedAt) as arrived">
+          <span translate="no" class="material-symbols-outlined notranslate">inventory_2</span>
+          <span>
+            Recebida em: <strong>{{ arrived | date: 'dd/MM/yyyy, HH:mm' }}</strong>
+            <ng-container *ngIf="p.receivedByName"> ({{ p.receivedByName }})</ng-container>
+          </span>
+        </div>
+
+        <div class="time-row delivered" *ngIf="toDateObj(p.pickedUpAt) as pickedUp">
+          <span translate="no" class="material-symbols-outlined notranslate">how_to_reg</span>
+          <span>
+            Retirada em: <strong>{{ pickedUp | date: 'dd/MM/yyyy, HH:mm' }}</strong>
+          </span>
+        </div>
+      </div>
+
+      <footer class="card-footer" *ngIf="p.pickedUpByName || p.releasedByName">
+        <span *ngIf="p.pickedUpByName">
+          Retirado por: <strong>{{ p.pickedUpByName }}</strong>
+        </span>
+        <span *ngIf="p.releasedByName">
+          Baixa por: <strong>{{ p.releasedByName }}</strong>
+        </span>
+      </footer>
+    </article>
+  </div>
+
+  <!-- Vazio -->
+  <div class="empty-state" *ngIf="!isLoading && filteredPackages.length === 0">
+    <span translate="no" class="material-symbols-outlined notranslate">package_2</span>
+    <p>Nenhuma encomenda entregue encontrada para o filtro selecionado.</p>
+  </div>
+</div>

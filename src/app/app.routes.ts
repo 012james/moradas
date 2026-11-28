@@ -25,6 +25,7 @@ import { AtaCreateComponent } from './features/ata-create/ata-create.component';
 import { LoginComponent } from './features/login/login.component';
 import { RegisterComponent } from './features/register/register.component';
 import { registrationGuard } from './guards/registration.guard';
+import { AdminEncomendasHistoricoComponent } from './features/admin-encomendas-historico/admin-encomendas-historico.component';
 
 export const routes: Routes = [
  
@@ -55,6 +56,11 @@ export const routes: Routes = [
     path: 'admin',
     component: AdminComponent,
     canActivate: [roleGuard(['porteiro', 'sindico', 'secretaria'])]
+  },
+  {
+    path: 'admin/encomendas-historico',
+    component: AdminEncomendasHistoricoComponent,
+    canActivate: [roleGuard(['porteiro', 'sindico'])]
   },
   {
     path: 'admin/portaria',

@@ -1,5 +1,5 @@
-<div class="app-page">
-  <header class="pkg-topbar" *ngIf="authService.currentUser$ | async as user">
+<div class="app-page" *ngIf="authService.currentUser$ | async as user">
+  <header class="pkg-topbar">
     <div>
       <h1>Minhas Encomendas</h1>
       <span>Controle de retiradas • Casa {{ user.houseNumber }}</span>
@@ -15,12 +15,12 @@
     <span translate="no" class="material-symbols-outlined notranslate">chevron_right</span>
   </a>
 
-  <div *ngIf="(authService.canVote$ | async) === false" class="empty-card">
+  <div *ngIf="user.status !== 'approved'" class="empty-card">
     <span translate="no" class="material-symbols-outlined notranslate">hourglass_top</span>
     <p>Aguarde a aprovação da sua unidade pelo síndico para visualizar os pacotes da casa.</p>
   </div>
 
-  <ng-container *ngIf="authService.canVote$ | async">
+  <ng-container *ngIf="user.status === 'approved'">
     <!-- Tickets Pendentes -->
     <section class="ticket-section">
       <h2>Disponíveis na Portaria</h2>

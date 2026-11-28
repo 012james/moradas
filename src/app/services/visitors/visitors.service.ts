@@ -244,7 +244,7 @@ getVisitorLogs$(maxItems = 300): Observable<VisitorLog[]> {
     maxLimit = 300
   ): Observable<VisitorLog[]> {
     return new Observable<VisitorLog[]>((observer) => {
-      const logsRef = collection(this.db, 'visitor_logs'); // mantenha o nome exato da sua coleção
+      const logsRef = collection(this.db, 'visitor_logs');
       const constraints: any[] = [];
 
       if (startMs !== undefined) {

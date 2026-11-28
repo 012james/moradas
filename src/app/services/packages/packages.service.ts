@@ -165,9 +165,10 @@ export class PackagesService {
   // 1. Apenas encomendas aguardando retirada (tempo real, sem limite)
 getPendingPackagesByHouse$(houseNumber: number | string): Observable<PackageItem[]> {
   return new Observable((observer) => {
+    const houseNum = Number(houseNumber);
     const q = query(
       collection(this.db, 'packages'),
-      where('houseNumber', '==', houseNumber),
+      where('houseNumber', '==', houseNum),
       where('status', '==', 'aguardando')
     );
 
@@ -175,12 +176,12 @@ getPendingPackagesByHouse$(houseNumber: number | string): Observable<PackageItem
       q,
       (snap) => {
         const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as PackageItem[];
-        list.sort((a: any, b: any) => (b.createdAt || 0) - (a.createdAt || 0));
-        observer.next(list);
+        list.sort((a: any, b: any) => (b.receivedAt || 0) - (a.receivedAt || 0));
+        this.ngZone.run(() => observer.next(list));
       },
       (err) => {
         console.error('Erro ao buscar encomendas pendentes:', err);
-        observer.next([]);
+        this.ngZone.run(() => observer.next([]));
       }
     );
 
@@ -188,17 +189,17 @@ getPendingPackagesByHouse$(houseNumber: number | string): Observable<PackageItem
   });
 }
 
-// 2. Apenas as últimas 15 encomendas já entregues
 getDeliveredPackagesByHouse$(
   houseNumber: number | string,
   maxLimit = 15
 ): Observable<PackageItem[]> {
   return new Observable((observer) => {
+    const houseNum = Number(houseNumber);
     const q = query(
       collection(this.db, 'packages'),
-      where('houseNumber', '==', houseNumber),
+      where('houseNumber', '==', houseNum),
       where('status', '==', 'entregue'),
-      orderBy('createdAt', 'desc'),
+      orderBy('pickedUpAt', 'desc'),
       limit(maxLimit)
     );
 
@@ -206,11 +207,49 @@ getDeliveredPackagesByHouse$(
       q,
       (snap) => {
         const list = snap.docs.map((d) => ({ id: d.id, ...d.data() })) as PackageItem[];
+        this.ngZone.run(() => observer.next(list));
+      },
+      (err) => {
+        console.error('Erro ao buscar histórico de encomendas (verifique o índice no link acima):', err);
+        this.ngZone.run(() => observer.next([]));
+      }
+    );
+
+    return () => unsub();
+  });
+}
+
+getDeliveredHistory$(
+  startMs?: number,
+  endMs?: number,
+  maxLimit = 100
+): Observable<PackageItem[]> {
+  return new Observable<PackageItem[]>((observer) => {
+    const constraints: any[] = [where('status', '==', 'entregue')];
+
+    if (startMs !== undefined) {
+      constraints.push(where('pickedUpAt', '>=', startMs));
+    }
+    if (endMs !== undefined) {
+      constraints.push(where('pickedUpAt', '<=', endMs));
+    }
+
+    constraints.push(orderBy('pickedUpAt', 'desc'), limit(maxLimit));
+
+    const q = query(collection(this.db, 'packages'), ...constraints);
+
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const list = snap.docs.map((d) => ({
+          id: d.id,
+          ...d.data()
+        })) as PackageItem[];
         observer.next(list);
       },
       (err) => {
         console.error('Erro ao buscar histórico de encomendas:', err);
-        observer.next([]);
+        observer.error(err);
       }
     );
 
