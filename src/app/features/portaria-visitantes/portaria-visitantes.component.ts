@@ -231,8 +231,8 @@ export class PortariaVisitantesComponent implements OnInit, OnDestroy {
       return { startMs: start.getTime(), endMs: end.getTime(), maxLimit: 300 };
     }
 
-    // Só busca os últimos 300 quando o porteiro clicar explicitamente em "Todos"
-    return { maxLimit: 300 };
+    // Só busca os últimos 100 quando o porteiro clicar explicitamente em "Últimos 100"
+    return { maxLimit: 100 };
   }
 
   async confirmEntry(visitor: VisitorAuthorization): Promise<void> {
